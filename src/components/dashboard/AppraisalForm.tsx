@@ -112,6 +112,9 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
     return NON_TEACHING_EVALUATION_PARAMETERS;
   };
 
+  const evaluationParams = getEvaluationParameters();
+  const observationParams = isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+
   // Target Calculations
   const calculateTargetStats = () => {
     const targets = formData.targets || [];
@@ -252,20 +255,12 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
       maxTargets = 33;
     }
 
-    if (isTeachingStaff) {
-      maxObservation = LESSON_OBSERVATION_PARAMETERS.length * 4;
-      maxEvaluation = TEACHING_EVALUATION_PARAMETERS.length * 4;
-    } else if (roleCategory === 'NON_TEACHING') {
-      maxObservation = WORK_OBSERVATION_PARAMETERS.length * 4;
-      maxEvaluation = NON_TEACHING_EVALUATION_PARAMETERS.length * 4;
-    } else {
-      // Senior Leadership
-      // Assuming they use Work Observation or similar? The image for Senior Leadership only shows Targets + Evaluation.
-      // If no observation, maxObservation = 0.
-      // Let's check the image again. "K. SCORESHEET ... Targets Score ... Employee Evaluation". No Observation row.
-      maxObservation = 0; 
-      maxEvaluation = SENIOR_LEADERSHIP_EVALUATION_PARAMETERS.length * 4;
+    // Only Senior Leadership and Directors skip observation
+    if (!isSeniorLeadership) {
+      maxObservation = observationParams.length * 4;
     }
+
+    maxEvaluation = evaluationParams.length * 4;
 
     return { maxTargets, maxObservation, maxEvaluation, totalMax: maxTargets + maxObservation + maxEvaluation };
   };
@@ -277,8 +272,8 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
     if (showTargets) {
       total += targetStats.marks;
     }
-    // Only add observation score if applicable (Senior Leadership might not have it based on image)
-    if (roleCategory !== 'SENIOR_LEADERSHIP') {
+    // Only add observation score if applicable
+    if (!isSeniorLeadership) {
       total += observationStats.totalScore;
     }
     total += evaluationStats.totalScore;
