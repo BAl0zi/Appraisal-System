@@ -866,8 +866,8 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                   <thead className="bg-gray-50">
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Area</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target (%)</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual (%)</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Achieved</th>
                       {!isTargetsSet && !isCompleted && <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>}
                     </tr>
@@ -907,7 +907,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                               }}
                               disabled={isTargetsSet || isCompleted}
                               className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
-                              placeholder="Target"
+                              placeholder="Target (%)"
                             />
                           </td>
                           <td className="px-6 py-4">
@@ -922,7 +922,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                               }}
                               disabled={!isTargetsSet || isTargetsSubmitted || isCompleted}
                               className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
-                              placeholder={!isTargetsSet ? "Set targets first" : "Actual"}
+                              placeholder={!isTargetsSet ? "Set targets first" : "Actual (%)"}
                             />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
