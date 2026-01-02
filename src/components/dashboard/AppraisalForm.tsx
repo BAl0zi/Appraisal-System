@@ -86,10 +86,17 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
 
   const status = existingAppraisal?.status;
   const isCompleted = status === 'COMPLETED' || status === 'SIGNED';
-  const isTargetsSubmitted = status === 'TARGETS_SUBMITTED' || isCompleted;
-  const isEvaluationSubmitted = status === 'EVALUATION_SUBMITTED' || isTargetsSubmitted;
-  const isObservationSubmitted = status === 'OBSERVATION_SUBMITTED' || isEvaluationSubmitted;
-  const isTargetsSet = status === 'TARGETS_SET' || isObservationSubmitted;
+  
+  // Phase 2 is submitted if status is TARGETS_SUBMITTED or COMPLETED/SIGNED
+  // BUT NOT if we are in OBSERVATION or EVALUATION stages (unless it was already submitted, but we can't track that easily with single status)
+  // Actually, if we are in OBSERVATION_SUBMITTED, we want Phase 2 to be OPEN (not submitted).
+  const isTargetsSubmitted = (status === 'TARGETS_SUBMITTED' || isCompleted) && status !== 'OBSERVATION_SUBMITTED' && status !== 'EVALUATION_SUBMITTED';
+  
+  const isEvaluationSubmitted = status === 'EVALUATION_SUBMITTED' || isCompleted; // Evaluation is independent of Targets Phase 2
+  const isObservationSubmitted = status === 'OBSERVATION_SUBMITTED' || isEvaluationSubmitted || isCompleted;
+  
+  // Phase 1 is set if status is TARGETS_SET or any later stage
+  const isTargetsSet = status === 'TARGETS_SET' || status === 'TARGETS_SUBMITTED' || isObservationSubmitted || isTargetsSubmitted;
   
   const effectiveRole = appraisalRole || appraisee.role;
   const roleCategory = getRoleCategory(effectiveRole as UserRole);
@@ -475,7 +482,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                 </div>
               ) : isTargetsSet ? (
                 <div className="absolute top-4 right-4 text-yellow-600 flex items-center text-xs font-bold uppercase tracking-wider">
-                  <CheckCircle className="h-4 w-4 mr-1" /> Targets Set
+                  <CheckCircle className="h-4 w-4 mr-1" /> Phase 1 Done
                 </div>
               ) : null}
               <div className="p-4 bg-blue-50 rounded-full mb-4 group-hover:bg-blue-100">
@@ -1561,7 +1568,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                           }
                         });
                       }}
-                      disabled={isTargetsSubmitted}
+                      disabled={true}
                       date={formData.targetSignatures?.appraiseeDate || ''}
                       onDateChange={(date) => setFormData({
                         ...formData,
@@ -1582,7 +1589,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                           }
                         });
                       }}
-                      disabled={isTargetsSubmitted}
+                      disabled={true}
                       date={formData.targetSignatures?.appraiserDate || ''}
                       onDateChange={(date) => setFormData({
                         ...formData,
@@ -1590,17 +1597,6 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                       })}
                     />
                   </div>
-                  {!isTargetsSubmitted && (
-                    <div className="mt-4 flex justify-end print:hidden">
-                      <button
-                        onClick={() => handleSubmit('TARGETS_SUBMITTED')}
-                        disabled={loading}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        {loading ? 'Submitting...' : 'Submit Targets'}
-                      </button>
-                    </div>
-                  )}
                 </div>
               )}
 
