@@ -87,16 +87,17 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
   const status = existingAppraisal?.status;
   const isCompleted = status === 'COMPLETED' || status === 'SIGNED';
   
-  // Phase 2 is submitted if status is TARGETS_SUBMITTED or COMPLETED/SIGNED
-  // BUT NOT if we are in OBSERVATION or EVALUATION stages (unless it was already submitted, but we can't track that easily with single status)
-  // Actually, if we are in OBSERVATION_SUBMITTED, we want Phase 2 to be OPEN (not submitted).
-  const isTargetsSubmitted = (status === 'TARGETS_SUBMITTED' || isCompleted) && status !== 'OBSERVATION_SUBMITTED' && status !== 'EVALUATION_SUBMITTED';
-  
-  const isEvaluationSubmitted = status === 'EVALUATION_SUBMITTED' || isCompleted; // Evaluation is independent of Targets Phase 2
-  const isObservationSubmitted = status === 'OBSERVATION_SUBMITTED' || isEvaluationSubmitted || isCompleted;
-  
-  // Phase 1 is set if status is TARGETS_SET or any later stage
-  const isTargetsSet = status === 'TARGETS_SET' || status === 'TARGETS_SUBMITTED' || isObservationSubmitted || isTargetsSubmitted;
+  // Linear Progression:
+  // 1. TARGETS_SET (Phase 1)
+  // 2. OBSERVATION_SUBMITTED
+  // 3. EVALUATION_SUBMITTED
+  // 4. TARGETS_SUBMITTED (Phase 2 - Review)
+  // 5. COMPLETED
+
+  const isTargetsSubmitted = status === 'TARGETS_SUBMITTED' || isCompleted;
+  const isEvaluationSubmitted = status === 'EVALUATION_SUBMITTED' || isTargetsSubmitted;
+  const isObservationSubmitted = status === 'OBSERVATION_SUBMITTED' || isEvaluationSubmitted;
+  const isTargetsSet = status === 'TARGETS_SET' || isObservationSubmitted;
   
   const effectiveRole = appraisalRole || appraisee.role;
   const roleCategory = getRoleCategory(effectiveRole as UserRole);
