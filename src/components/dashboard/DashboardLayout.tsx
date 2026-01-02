@@ -56,7 +56,7 @@ export default function DashboardLayout({ children, currentUser, role, customNav
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#2D2B55] text-white transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#2D2B55] text-white transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-0 print:hidden`}>
         <div className="flex items-center justify-between h-16 px-6 bg-[#1E1C3A]">
           <span className="text-xl font-bold tracking-wider">Urafiki Carovana</span>
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-300 hover:text-white">
@@ -108,10 +108,9 @@ export default function DashboardLayout({ children, currentUser, role, customNav
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Header */}
-        <header className="bg-white shadow-sm z-10">
+        <header className="bg-white shadow-sm z-10 print:hidden">
           <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -155,7 +154,7 @@ export default function DashboardLayout({ children, currentUser, role, customNav
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8 print:p-0 print:bg-white print:overflow-visible">
           {children}
         </main>
       </div>

@@ -8,11 +8,19 @@ import { requestDeletion } from '@/app/actions/appraisal-actions';
 
 interface AppraiserContentProps {
   currentUser: { id: string; email?: string; full_name?: string };
+  initialTab?: 'home' | 'appraisals';
+  currentTab?: 'home' | 'appraisals';
 }
 
-export default function AppraiserContent({ currentUser }: AppraiserContentProps) {
+export default function AppraiserContent({ currentUser, initialTab = 'home', currentTab }: AppraiserContentProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'home' | 'appraisals'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'appraisals'>(initialTab);
+
+  useEffect(() => {
+    if (currentTab) {
+      setActiveTab(currentTab);
+    }
+  }, [currentTab]);
   const [appraisees, setAppraisees] = useState<any[]>([]);
   const [appraisals, setAppraisals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +31,21 @@ export default function AppraiserContent({ currentUser }: AppraiserContentProps)
   const [deleteReason, setDeleteReason] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  // Term Selection State
+  // View State (Dashboard Filter)
+  const [viewTerm, setViewTerm] = useState(() => {
+    const month = new Date().getMonth();
+    if (month === 11) return 'Term 1';
+    if (month <= 3) return 'Term 1';
+    if (month <= 7) return 'Term 2';
+    return 'Term 3';
+  });
+
+  const [viewYear, setViewYear] = useState(() => {
+    const date = new Date();
+    return (date.getMonth() === 11 ? date.getFullYear() + 1 : date.getFullYear()).toString();
+  });
+
+  // Term Selection State (Modal)
   const [isTermModalOpen, setIsTermModalOpen] = useState(false);
   const [selectedAppraiseeIdForTerm, setSelectedAppraiseeIdForTerm] = useState<string | null>(null);
   const [selectedAppraiseeRoleForTerm, setSelectedAppraiseeRoleForTerm] = useState<string | null>(null);
@@ -36,7 +58,7 @@ export default function AppraiserContent({ currentUser }: AppraiserContentProps)
     return 'Term 3';
   });
 
-  const [selectedYear] = useState(() => {
+  const [selectedYear, setSelectedYear] = useState(() => {
     const date = new Date();
     return (date.getMonth() === 11 ? date.getFullYear() + 1 : date.getFullYear()).toString();
   });
@@ -49,6 +71,11 @@ export default function AppraiserContent({ currentUser }: AppraiserContentProps)
   const handleStartAppraisalClick = (appraiseeId: string, role: string) => {
     setSelectedAppraiseeIdForTerm(appraiseeId);
     setSelectedAppraiseeRoleForTerm(role);
+    setSelectedTerm(viewTerm);
+    // Always set to current academic year for new appraisals
+    const date = new Date();
+    const currentYear = (date.getMonth() === 11 ? date.getFullYear() + 1 : date.getFullYear()).toString();
+    setSelectedYear(currentYear);
     setIsTermModalOpen(true);
   };
 
@@ -129,15 +156,25 @@ export default function AppraiserContent({ currentUser }: AppraiserContentProps)
   }, [currentUser.id]);
 
   // Calculate stats
+  const currentViewAppraisals = appraisals.filter(a => 
+    a.appraisal_data?.term === viewTerm &&
+    a.appraisal_data?.year === viewYear
+  );
+
   const totalAppraisees = appraisees.length;
-  const completedAppraisals = appraisals.filter(a => a.status === 'COMPLETED' || a.status === 'SIGNED').length;
+  const completedAppraisals = currentViewAppraisals.filter(a => a.status === 'COMPLETED' || a.status === 'SIGNED').length;
   const pendingAppraisals = totalAppraisees - completedAppraisals;
-  const averageScore = appraisals.length > 0 
-    ? appraisals.reduce((acc, curr) => acc + (curr.overall_score || 0), 0) / appraisals.length 
+  const averageScore = currentViewAppraisals.length > 0 
+    ? currentViewAppraisals.reduce((acc, curr) => acc + (curr.overall_score || 0), 0) / currentViewAppraisals.length 
     : 0;
 
   const getAppraisalForUser = (userId: string, role: string) => {
-    return appraisals.find(a => a.appraisee_id === userId && a.role === role);
+    return appraisals.find(a => 
+      a.appraisee_id === userId && 
+      a.role === role && 
+      a.appraisal_data?.term === viewTerm &&
+      a.appraisal_data?.year === viewYear
+    );
   };
 
   if (loading) {
@@ -150,32 +187,66 @@ export default function AppraiserContent({ currentUser }: AppraiserContentProps)
 
   return (
     <div className="space-y-6">
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1 mb-6 inline-flex">
-          <nav className="flex space-x-1" aria-label="Tabs">
-            <button
-              onClick={() => setActiveTab('home')}
-              className={`${
-                activeTab === 'home'
-                  ? 'bg-indigo-50 text-indigo-700 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              } px-4 py-2 rounded-lg font-medium text-sm flex items-center transition-all`}
-            >
-              <Users className="mr-2 h-4 w-4" />
-              Home
-            </button>
-            <button
-              onClick={() => setActiveTab('appraisals')}
-              className={`${
-                activeTab === 'appraisals'
-                  ? 'bg-indigo-50 text-indigo-700 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              } px-4 py-2 rounded-lg font-medium text-sm flex items-center transition-all`}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              My Appraisals
-            </button>
-          </nav>
+        {/* Controls Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          {/* Tabs */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1 inline-flex">
+            <nav className="flex space-x-1" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('home')}
+                className={`${
+                  activeTab === 'home'
+                    ? 'bg-indigo-50 text-indigo-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                } px-4 py-2 rounded-lg font-medium text-sm flex items-center transition-all`}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Home
+              </button>
+              <button
+                onClick={() => setActiveTab('appraisals')}
+                className={`${
+                  activeTab === 'appraisals'
+                    ? 'bg-indigo-50 text-indigo-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                } px-4 py-2 rounded-lg font-medium text-sm flex items-center transition-all`}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                My Appraisals
+              </button>
+            </nav>
+          </div>
+
+          {/* Period Selector */}
+          <div className="flex items-center space-x-3 bg-white p-2 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center space-x-2">
+              <label htmlFor="view-term" className="text-sm font-medium text-gray-700 whitespace-nowrap">Term:</label>
+              <select
+                id="view-term"
+                value={viewTerm}
+                onChange={(e) => setViewTerm(e.target.value)}
+                className="block w-full pl-3 pr-8 py-1 text-sm border border-gray-300 text-gray-900 bg-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+              >
+                <option value="Term 1">Term 1</option>
+                <option value="Term 2">Term 2</option>
+                <option value="Term 3">Term 3</option>
+              </select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <label htmlFor="view-year" className="text-sm font-medium text-gray-700 whitespace-nowrap">Year:</label>
+              <select
+                id="view-year"
+                value={viewYear}
+                onChange={(e) => setViewYear(e.target.value)}
+                className="block w-full pl-3 pr-8 py-1 text-sm border border-gray-300 text-gray-900 bg-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+              >
+                {[0, 1, 2].map(offset => {
+                  const y = (parseInt(new Date().getFullYear().toString()) - 1 + offset).toString();
+                  return <option key={y} value={y}>{y}</option>;
+                })}
+              </select>
+            </div>
+          </div>
         </div>
 
         {activeTab === 'home' ? (
@@ -531,7 +602,7 @@ export default function AppraiserContent({ currentUser }: AppraiserContentProps)
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Year</label>
-                        <div className="mt-1 block w-full py-2 px-3 text-gray-900 bg-gray-100 border border-gray-300 rounded-md sm:text-sm">
+                        <div className="mt-1 block w-full py-2 px-3 text-gray-500 bg-gray-100 border border-gray-300 rounded-md sm:text-sm cursor-not-allowed">
                           {selectedYear}
                         </div>
                       </div>

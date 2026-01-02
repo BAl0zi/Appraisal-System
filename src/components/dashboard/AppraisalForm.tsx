@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { saveAppraisal } from '@/app/actions/appraisal-actions';
-import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, Printer, Download } from 'lucide-react';
+import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, Printer, Download, CheckCircle } from 'lucide-react';
 import SignatureInput from '../SignatureInput';
 import { getRoleCategory, UserRole } from '@/constants/roles';
 import { LESSON_OBSERVATION_PARAMETERS, WORK_OBSERVATION_PARAMETERS, PROFESSIONAL_DOCUMENTS } from '@/constants/observation-criteria';
@@ -34,16 +34,18 @@ interface AppraisalFormProps {
   initialTerm?: string;
   initialYear?: string;
   appraisalRole?: string;
+  initialView?: string;
+  hideBack?: boolean;
 }
 
 type AppraisalView = 'MENU' | 'TARGETS' | 'OBSERVATION' | 'EVALUATION' | 'SCORESHEET';
 
-export default function AppraisalForm({ appraiserId, appraisee, existingAppraisal, initialTerm, initialYear, appraisalRole }: AppraisalFormProps) {
+export default function AppraisalForm({ appraiserId, appraisee, existingAppraisal, initialTerm, initialYear, appraisalRole, initialView, hideBack }: AppraisalFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isPrintingFullReport, setIsPrintingFullReport] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const [currentView, setCurrentView] = useState<AppraisalView>('MENU');
+  const [currentView, setCurrentView] = useState<AppraisalView>((initialView as AppraisalView) || 'MENU');
   
   // Initial state from existing appraisal or defaults
   const [formData, setFormData] = useState(existingAppraisal?.appraisal_data || {
@@ -68,6 +70,12 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
       appraiserSignature: '',
       appraiserDate: ''
     },
+    targetReviewSignatures: {
+      appraiseeSignature: '',
+      appraiseeDate: '',
+      appraiserSignature: '',
+      appraiserDate: ''
+    },
     completionSignatures: {
       appraiseeSignature: '',
       appraiseeDate: '',
@@ -81,6 +89,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
   const isEvaluationSubmitted = status === 'EVALUATION_SUBMITTED' || isCompleted;
   const isObservationSubmitted = status === 'OBSERVATION_SUBMITTED' || isEvaluationSubmitted;
   const isTargetsSubmitted = status === 'TARGETS_SUBMITTED' || isObservationSubmitted;
+  const isTargetsSet = status === 'TARGETS_SET' || isTargetsSubmitted;
   
   const effectiveRole = appraisalRole || appraisee.role;
   const roleCategory = getRoleCategory(effectiveRole as UserRole);
@@ -300,10 +309,28 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
     setLoading(true);
     setMessage(null);
 
-    // Validation: Check signatures before submitting targets
-    if (status === 'TARGETS_SUBMITTED') {
+    // Validation: Check signatures before setting targets (Phase 1)
+    if (status === 'TARGETS_SET') {
       if (!formData.targetSignatures?.appraiseeSignature || !formData.targetSignatures?.appraiserSignature) {
-        setMessage({ type: 'error', text: 'Both Appraiser and Appraisee must sign before submitting targets.' });
+        setMessage({ type: 'error', text: 'Both Appraiser and Appraisee must sign before setting targets.' });
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Validation: Check signatures before submitting targets review (Phase 2)
+    if (status === 'TARGETS_SUBMITTED') {
+      // 1. Check Signatures
+      if (!formData.targetReviewSignatures?.appraiseeSignature || !formData.targetReviewSignatures?.appraiserSignature) {
+        setMessage({ type: 'error', text: 'Both Appraiser and Appraisee must sign the review before completing targets.' });
+        setLoading(false);
+        return;
+      }
+
+      // 2. Check Actuals
+      const missingActual = formData.targets.find((t: Target) => !t.actual || t.actual.trim() === '');
+      if (missingActual) {
+        setMessage({ type: 'error', text: 'All targets must have an "Actual" performance value entered before submitting the review.' });
         setLoading(false);
         return;
       }
@@ -311,10 +338,29 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
 
     // Validation: Check signatures before completing appraisal
     if (status === 'COMPLETED') {
+      // 1. Check Final Signatures
       if (!formData.completionSignatures?.appraiseeSignature || !formData.completionSignatures?.appraiserSignature) {
         setMessage({ type: 'error', text: 'Both Appraiser and Appraisee must sign before completing the appraisal.' });
         setLoading(false);
         return;
+      }
+
+      // 2. Check Targets (Phase 2) - Actuals and Signatures
+      if (showTargets) {
+        // Check if Phase 2 signatures are present
+        if (!formData.targetReviewSignatures?.appraiseeSignature || !formData.targetReviewSignatures?.appraiserSignature) {
+          setMessage({ type: 'error', text: 'Targets Review (Phase 2) must be signed by both parties before completing the appraisal.' });
+          setLoading(false);
+          return;
+        }
+
+        // Check if actuals are entered
+        const missingActual = formData.targets.find((t: Target) => !t.actual || t.actual.trim() === '');
+        if (missingActual) {
+          setMessage({ type: 'error', text: 'All targets must have an "Actual" performance value entered before completing the appraisal.' });
+          setLoading(false);
+          return;
+        }
       }
     }
 
@@ -369,20 +415,27 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
     const result = await saveAppraisal(payload);
 
     if (result.success) {
-      const successText = status === 'TARGETS_SUBMITTED' 
-        ? 'Targets submitted successfully' 
-        : status === 'OBSERVATION_SUBMITTED'
-          ? 'Observations submitted successfully'
-          : status === 'EVALUATION_SUBMITTED'
-            ? 'Evaluation submitted successfully'
-            : status === 'COMPLETED' 
-              ? 'Appraisal completed successfully'
-              : 'Progress saved successfully';
+      const successText = status === 'TARGETS_SET'
+        ? 'Targets set successfully'
+        : status === 'TARGETS_SUBMITTED' 
+          ? 'Targets review submitted successfully' 
+          : status === 'OBSERVATION_SUBMITTED'
+            ? 'Observations submitted successfully'
+            : status === 'EVALUATION_SUBMITTED'
+              ? 'Evaluation submitted successfully'
+              : status === 'COMPLETED' 
+                ? 'Appraisal completed successfully'
+                : 'Progress saved successfully';
       
       setMessage({ type: 'success', text: successText });
       
-      if (status === 'COMPLETED' || status === 'TARGETS_SUBMITTED' || status === 'OBSERVATION_SUBMITTED' || status === 'EVALUATION_SUBMITTED') {
-        setTimeout(() => router.push('/dashboard'), 1500);
+      // Only redirect if we are advancing the status or completing the appraisal
+      // If we are just saving progress (status hasn't changed), don't redirect
+      const isAdvancing = status !== existingAppraisal?.status;
+      
+      if (isAdvancing || status === 'COMPLETED') {
+        router.refresh();
+        setTimeout(() => setCurrentView('MENU'), 1500);
       }
     } else {
       setMessage({ type: 'error', text: result.error || 'Failed to save appraisal' });
@@ -396,9 +449,11 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
       <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center">
-            <button onClick={() => router.back()} className="mr-4 text-gray-500 hover:text-gray-700" aria-label="Go back">
-              <ArrowLeft className="h-6 w-6" />
-            </button>
+            {!hideBack && (
+              <button onClick={() => router.back()} className="mr-4 text-gray-500 hover:text-gray-700" aria-label="Go back">
+                <ArrowLeft className="h-6 w-6" />
+              </button>
+            )}
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Appraisal Dashboard</h1>
               <p className="text-sm text-gray-500">Appraising: <span className="font-medium text-gray-900">{appraisee.full_name}</span> ({effectiveRole})</p>
@@ -412,8 +467,17 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
           {showTargets && (
             <button
               onClick={() => setCurrentView('TARGETS')}
-              className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group text-center"
+              className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group text-center relative"
             >
+              {isTargetsSubmitted ? (
+                <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
+                  <CheckCircle className="h-4 w-4 mr-1" /> Completed
+                </div>
+              ) : isTargetsSet ? (
+                <div className="absolute top-4 right-4 text-yellow-600 flex items-center text-xs font-bold uppercase tracking-wider">
+                  <CheckCircle className="h-4 w-4 mr-1" /> Targets Set
+                </div>
+              ) : null}
               <div className="p-4 bg-blue-50 rounded-full mb-4 group-hover:bg-blue-100">
                 <Target className="h-8 w-8 text-blue-600" />
               </div>
@@ -425,8 +489,13 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
           {/* 2. Lesson/Work Observation */}
           <button
             onClick={() => setCurrentView('OBSERVATION')}
-            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all group text-center"
+            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all group text-center relative"
           >
+            {isObservationSubmitted && (
+              <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
+                <CheckCircle className="h-4 w-4 mr-1" /> Completed
+              </div>
+            )}
             <div className="p-4 bg-purple-50 rounded-full mb-4 group-hover:bg-purple-100">
               <Eye className="h-8 w-8 text-purple-600" />
             </div>
@@ -437,8 +506,13 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
           {/* 3. Employee Evaluation */}
           <button
             onClick={() => setCurrentView('EVALUATION')}
-            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-orange-500 hover:shadow-md transition-all group text-center"
+            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-orange-500 hover:shadow-md transition-all group text-center relative"
           >
+            {isEvaluationSubmitted && (
+              <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
+                <CheckCircle className="h-4 w-4 mr-1" /> Completed
+              </div>
+            )}
             <div className="p-4 bg-orange-50 rounded-full mb-4 group-hover:bg-orange-100">
               <ClipboardCheck className="h-8 w-8 text-orange-600" />
             </div>
@@ -449,8 +523,13 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
           {/* 4. Final Scoresheet */}
           <button
             onClick={() => setCurrentView('SCORESHEET')}
-            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-green-500 hover:shadow-md transition-all group text-center"
+            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-green-500 hover:shadow-md transition-all group text-center relative"
           >
+            {isCompleted && (
+              <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
+                <CheckCircle className="h-4 w-4 mr-1" /> Completed
+              </div>
+            )}
             <div className="p-4 bg-green-50 rounded-full mb-4 group-hover:bg-green-100">
               <FileText className="h-8 w-8 text-green-600" />
             </div>
@@ -465,11 +544,19 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 print:p-0 print:max-w-none">
       {/* Header for Sub-views */}
+      <div className="hidden print:block mb-4 text-center">
+        <h1 className="text-xl font-bold text-gray-900 uppercase">Final Scoresheet</h1>
+        <p className="text-sm text-gray-600">{appraisee.full_name} - {appraisee.role}</p>
+        <p className="text-xs text-gray-500">{formData.term} {formData.year}</p>
+      </div>
+
       <div className="mb-8 flex items-center justify-between print:hidden">
         <div className="flex items-center">
-          <button onClick={() => setCurrentView('MENU')} className="mr-4 text-gray-500 hover:text-gray-700" aria-label="Back to Menu">
-            <ArrowLeft className="h-6 w-6" />
-          </button>
+          {!hideBack && (
+            <button onClick={() => setCurrentView('MENU')} className="mr-4 text-gray-500 hover:text-gray-700" aria-label="Back to Menu">
+              <ArrowLeft className="h-6 w-6" />
+            </button>
+          )}
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
               {currentView === 'TARGETS' && 'Setting Targets'}
@@ -485,17 +572,19 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
             <>
               <button
                 onClick={() => window.print()}
+                title="Print or Save as PDF"
                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <Printer className="h-4 w-4 mr-2" />
-                Print Scoresheet
+                Print / Save PDF
               </button>
               <button
                 onClick={handleDownloadFullReport}
+                title="Generate Full Report for Printing or PDF"
                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Download Full Report
+                Full Report (PDF)
               </button>
             </>
           )}
@@ -586,6 +675,31 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
              </div>
           )}
 
+          {/* Professional Documents (Teaching Staff Only) */}
+          {isTeachingStaff && (
+             <div className="break-inside-avoid">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">PROFESSIONAL DOCUMENTS</h3>
+                <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-2/3">Document</th>
+                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {PROFESSIONAL_DOCUMENTS.map((doc, index) => (
+                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <td className="px-4 py-2 text-sm text-gray-900 border-r">{index + 1}. {doc}</td>
+                        <td className="px-4 py-2 text-center text-sm text-gray-900 font-medium capitalize">
+                          {(formData.observation?.documents?.[index] || 'not_available').replace('_', ' ')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+             </div>
+          )}
+
           {/* Evaluation Section */}
           <div className="break-inside-avoid">
             <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
@@ -609,6 +723,32 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Comments Section */}
+          <div className="break-inside-avoid">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">COMMENTS & REMARKS</h3>
+            
+            <div className="mb-6">
+              <h4 className="text-md font-bold text-gray-800 mb-2">Observation Comments</h4>
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[80px]">
+                {formData.observation?.comments || 'No comments provided.'}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-md font-bold text-gray-800 mb-2">Progress Remarks</h4>
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[80px]">
+                {formData.evaluation?.progressComments?.[0] || 'No remarks provided.'}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-md font-bold text-gray-800 mb-2">Areas for Improvement</h4>
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[80px]">
+                {formData.evaluation?.improvementComments?.[0] || 'No remarks provided.'}
+              </div>
+            </div>
           </div>
 
           {/* Scoresheet Section */}
@@ -685,7 +825,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                 </div>
              </div>
              
-             <div className="mt-8 flex flex-col items-center">
+             <div className="mt-8 flex flex-col items-center break-inside-avoid">
                 <span className="text-gray-900 font-bold uppercase mb-2">Official School Stamp</span>
                 <div className="border-2 border-gray-800 h-32 w-48 bg-white"></div>
              </div>
@@ -698,8 +838,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
         <div className="space-y-8">
           <div className="bg-white shadow sm:rounded-lg overflow-hidden">
             <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Targets Scoresheet</h3>
-              {!isCompleted && (
+              <div>
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Targets Scoresheet</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {!isTargetsSet 
+                    ? 'Phase 1: Set targets and sign to lock them.' 
+                    : 'Phase 2: Enter actual results and sign to complete.'}
+                </p>
+              </div>
+              {!isTargetsSet && !isCompleted && (
                 <button onClick={addTarget} className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200">
                   <Plus className="h-4 w-4 mr-1" /> Add Target
                 </button>
@@ -714,7 +861,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Achieved</th>
-                      {!isCompleted && <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>}
+                      {!isTargetsSet && !isCompleted && <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -735,7 +882,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                                 );
                                 setFormData({ ...formData, targets: newTargets });
                               }}
-                              disabled={isCompleted}
+                              disabled={isTargetsSet || isCompleted}
                               className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
                               placeholder="Area of focus"
                             />
@@ -750,7 +897,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                                 );
                                 setFormData({ ...formData, targets: newTargets });
                               }}
-                              disabled={isCompleted}
+                              disabled={isTargetsSet || isCompleted}
                               className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
                               placeholder="Target"
                             />
@@ -765,15 +912,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                                 );
                                 setFormData({ ...formData, targets: newTargets });
                               }}
-                              disabled={isCompleted}
+                              disabled={!isTargetsSet || isTargetsSubmitted || isCompleted}
                               className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
-                              placeholder="Actual"
+                              placeholder={!isTargetsSet ? "Set targets first" : "Actual"}
                             />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {pct}%
                           </td>
-                          {!isCompleted && (
+                          {!isTargetsSet && !isCompleted && (
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <button onClick={() => removeTarget(target.id)} className="text-red-600 hover:text-red-900" aria-label="Remove Target">
                                 <Trash2 className="h-4 w-4" />
@@ -787,6 +934,131 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                 </table>
               </div>
             </div>
+          </div>
+
+          {/* Phase 1 Signatures */}
+          <div className="bg-white shadow sm:rounded-lg overflow-hidden">
+            <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Phase 1: Target Setting Agreement</h3>
+            </div>
+            <div className="px-4 py-5 sm:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <SignatureInput
+                  label="Appraisee Signature"
+                  value={formData.targetSignatures?.appraiseeSignature || ''}
+                  onChange={(val) => {
+                    const date = val ? new Date().toISOString().split('T')[0] : '';
+                    setFormData({
+                      ...formData,
+                      targetSignatures: { 
+                        ...formData.targetSignatures, 
+                        appraiseeSignature: val,
+                        appraiseeDate: date
+                      }
+                    });
+                  }}
+                  disabled={isTargetsSet || isCompleted}
+                  date={formData.targetSignatures?.appraiseeDate || ''}
+                />
+                <SignatureInput
+                  label="Appraiser Signature"
+                  value={formData.targetSignatures?.appraiserSignature || ''}
+                  onChange={(val) => {
+                    const date = val ? new Date().toISOString().split('T')[0] : '';
+                    setFormData({
+                      ...formData,
+                      targetSignatures: { 
+                        ...formData.targetSignatures, 
+                        appraiserSignature: val,
+                        appraiserDate: date
+                      }
+                    });
+                  }}
+                  disabled={isTargetsSet || isCompleted}
+                  date={formData.targetSignatures?.appraiserDate || ''}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Phase 2 Signatures (Only visible if Phase 1 is done) */}
+          {isTargetsSet && (
+            <div className="bg-white shadow sm:rounded-lg overflow-hidden">
+              <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Phase 2: Target Review Agreement</h3>
+              </div>
+              <div className="px-4 py-5 sm:p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <SignatureInput
+                    label="Appraisee Signature"
+                    value={formData.targetReviewSignatures?.appraiseeSignature || ''}
+                    onChange={(val) => {
+                      const date = val ? new Date().toISOString().split('T')[0] : '';
+                      setFormData({
+                        ...formData,
+                        targetReviewSignatures: { 
+                          ...formData.targetReviewSignatures, 
+                          appraiseeSignature: val,
+                          appraiseeDate: date
+                        }
+                      });
+                    }}
+                    disabled={isTargetsSubmitted || isCompleted}
+                    date={formData.targetReviewSignatures?.appraiseeDate || ''}
+                  />
+                  <SignatureInput
+                    label="Appraiser Signature"
+                    value={formData.targetReviewSignatures?.appraiserSignature || ''}
+                    onChange={(val) => {
+                      const date = val ? new Date().toISOString().split('T')[0] : '';
+                      setFormData({
+                        ...formData,
+                        targetReviewSignatures: { 
+                          ...formData.targetReviewSignatures, 
+                          appraiserSignature: val,
+                          appraiserDate: date
+                        }
+                      });
+                    }}
+                    disabled={isTargetsSubmitted || isCompleted}
+                    date={formData.targetReviewSignatures?.appraiserDate || ''}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-4">
+            <button
+              type="button"
+              onClick={() => handleSubmit(existingAppraisal?.status || 'DRAFT')}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Draft
+            </button>
+            
+            {!isTargetsSet && (
+              <button
+                type="button"
+                onClick={() => handleSubmit('TARGETS_SET')}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={loading || isCompleted}
+              >
+                {loading ? 'Saving...' : 'Set Targets (Phase 1)'}
+              </button>
+            )}
+
+            {isTargetsSet && !isTargetsSubmitted && (
+              <button
+                type="button"
+                onClick={() => handleSubmit('TARGETS_SUBMITTED')}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                disabled={loading || isCompleted}
+              >
+                {loading ? 'Submitting...' : 'Complete Targets (Phase 2)'}
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -1114,11 +1386,11 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
 
       {/* SCORESHEET VIEW */}
       {!isPrintingFullReport && currentView === 'SCORESHEET' && (
-        <div className="space-y-8">
+        <div className="space-y-8 print:space-y-2">
           {/* Summary */}
-          <div className="bg-white shadow sm:rounded-lg overflow-hidden">
-            <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
+          <div className="bg-white shadow sm:rounded-lg overflow-hidden print:shadow-none print:border print:border-gray-300">
+            <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 print:py-2 print:px-4">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 print:text-base">
                 {isSeniorLeadership 
                   ? 'K. SCORESHEET - SENIOR LEADERSHIP' 
                   : isTeachingStaff 
@@ -1126,15 +1398,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     : 'J. SCORESHEET - NON-TEACHING STAFF'}
               </h3>
             </div>
-            <div className="px-4 py-5 sm:p-6">
+            <div className="px-4 py-5 sm:p-6 print:p-2">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
+                <table className="min-w-full divide-y divide-gray-200 border border-gray-300 print:text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300">Component</th>
-                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300">Term 1</th>
-                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300">Term 2</th>
-                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Term 3</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300 print:px-2 print:py-1">Component</th>
+                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300 print:px-2 print:py-1">Term 1</th>
+                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300 print:px-2 print:py-1">Term 2</th>
+                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider print:px-2 print:py-1">Term 3</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -1145,35 +1417,35 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         <>
                           {showTargets && (
                             <tr>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-300">TARGETS SCORE</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300">{termNum === 1 ? targetStats.marks : '-'}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300">{termNum === 2 ? targetStats.marks : '-'}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{termNum === 3 ? targetStats.marks : '-'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-300 print:px-2 print:py-1">TARGETS SCORE</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300 print:px-2 print:py-1">{termNum === 1 ? targetStats.marks : '-'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300 print:px-2 print:py-1">{termNum === 2 ? targetStats.marks : '-'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 print:px-2 print:py-1">{termNum === 3 ? targetStats.marks : '-'}</td>
                             </tr>
                           )}
                           {!isSeniorLeadership && (
                             <>
                               <tr>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-300">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-300 print:px-2 print:py-1">
                                   {isTeachingStaff ? 'LESSON OBSERVATION' : 'WORK OBSERVATION'}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300">{termNum === 1 ? observationStats.totalScore : '-'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300">{termNum === 2 ? observationStats.totalScore : '-'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{termNum === 3 ? observationStats.totalScore : '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300 print:px-2 print:py-1">{termNum === 1 ? observationStats.totalScore : '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300 print:px-2 print:py-1">{termNum === 2 ? observationStats.totalScore : '-'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 print:px-2 print:py-1">{termNum === 3 ? observationStats.totalScore : '-'}</td>
                               </tr>
                             </>
                           )}
                           <tr>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-300">EMPLOYEE EVALUATION</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300">{termNum === 1 ? evaluationStats.totalScore : '-'}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300">{termNum === 2 ? evaluationStats.totalScore : '-'}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{termNum === 3 ? evaluationStats.totalScore : '-'}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-300 print:px-2 print:py-1">EMPLOYEE EVALUATION</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300 print:px-2 print:py-1">{termNum === 1 ? evaluationStats.totalScore : '-'}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300 print:px-2 print:py-1">{termNum === 2 ? evaluationStats.totalScore : '-'}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 print:px-2 print:py-1">{termNum === 3 ? evaluationStats.totalScore : '-'}</td>
                           </tr>
                           <tr className="bg-gray-50 font-bold">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">TERMLY TOTALS</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 border-r border-gray-300">{termNum === 1 ? totalScore : '-'}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 border-r border-gray-300">{termNum === 2 ? totalScore : '-'}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">{termNum === 3 ? totalScore : '-'}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300 print:px-2 print:py-1">TERMLY TOTALS</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 border-r border-gray-300 print:px-2 print:py-1">{termNum === 1 ? totalScore : '-'}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 border-r border-gray-300 print:px-2 print:py-1">{termNum === 2 ? totalScore : '-'}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 print:px-2 print:py-1">{termNum === 3 ? totalScore : '-'}</td>
                           </tr>
                         </>
                       );
@@ -1182,63 +1454,63 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                 </table>
               </div>
 
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <h4 className="text-sm font-bold text-gray-700 mb-4 uppercase">Rating Scale</h4>
-                  <div className="space-y-2">
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 print:mt-4 print:gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 print:p-2">
+                  <h4 className="text-sm font-bold text-gray-700 mb-4 uppercase print:mb-2">Rating Scale</h4>
+                  <div className="space-y-2 print:space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Leading (93%-100%)</span>
-                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Leading' ? 'bg-blue-600 border-blue-600' : ''}`}>
+                      <span className="text-sm text-gray-600 print:text-xs">Leading (93%-100%)</span>
+                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Leading' ? 'bg-blue-600 border-blue-600' : ''} print:w-4 print:h-4`}>
                         {currentRating === 'Leading' && <span className="text-white text-xs">✓</span>}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Strong (80%-92%)</span>
-                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Strong' ? 'bg-blue-600 border-blue-600' : ''}`}>
+                      <span className="text-sm text-gray-600 print:text-xs">Strong (80%-92%)</span>
+                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Strong' ? 'bg-blue-600 border-blue-600' : ''} print:w-4 print:h-4`}>
                         {currentRating === 'Strong' && <span className="text-white text-xs">✓</span>}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Solid (65%-79%)</span>
-                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Solid' ? 'bg-blue-600 border-blue-600' : ''}`}>
+                      <span className="text-sm text-gray-600 print:text-xs">Solid (65%-79%)</span>
+                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Solid' ? 'bg-blue-600 border-blue-600' : ''} print:w-4 print:h-4`}>
                         {currentRating === 'Solid' && <span className="text-white text-xs">✓</span>}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Building (50%-64%)</span>
-                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Building' ? 'bg-blue-600 border-blue-600' : ''}`}>
+                      <span className="text-sm text-gray-600 print:text-xs">Building (50%-64%)</span>
+                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Building' ? 'bg-blue-600 border-blue-600' : ''} print:w-4 print:h-4`}>
                         {currentRating === 'Building' && <span className="text-white text-xs">✓</span>}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Below Expectations (&lt;49%)</span>
-                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Below Expectations' ? 'bg-blue-600 border-blue-600' : ''}`}>
+                      <span className="text-sm text-gray-600 print:text-xs">Below Expectations (&lt;49%)</span>
+                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Below Expectations' ? 'bg-blue-600 border-blue-600' : ''} print:w-4 print:h-4`}>
                         {currentRating === 'Below Expectations' && <span className="text-white text-xs">✓</span>}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col justify-center items-center text-center">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col justify-center items-center text-center print:p-2">
                   <h4 className="text-sm font-bold text-gray-700 mb-2 uppercase">Current Term Score</h4>
-                  <div className="text-4xl font-bold text-blue-600 mb-2">{percentage.toFixed(1)}%</div>
-                  <p className="text-sm text-gray-500">Based on Termly Total: {totalScore} / {maxScores.totalMax}</p>
+                  <div className="text-4xl font-bold text-blue-600 mb-2 print:text-2xl">{percentage.toFixed(1)}%</div>
+                  <p className="text-sm text-gray-500 print:text-xs">Based on Termly Total: {totalScore} / {maxScores.totalMax}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Signatures */}
-          <div className="bg-white shadow sm:rounded-lg overflow-hidden">
-            <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Signatures</h3>
+          {/* Phase 1 Signatures */}
+          <div className="bg-white shadow sm:rounded-lg overflow-hidden print:shadow-none print:border print:border-gray-300">
+            <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 print:py-2 print:px-4">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 print:text-base">Phase 1: Target Setting Agreement</h3>
             </div>
-            <div className="px-4 py-5 sm:p-6">
+            <div className="px-4 py-5 sm:p-6 print:p-2">
               {/* Target Signatures (if applicable) */}
               {showTargets && (
-                <div className="mb-8">
-                  <h4 className="text-md font-medium text-gray-900 mb-4">Targets Agreement</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="mb-8 print:mb-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-4 print:mb-2 print:text-sm">Targets Agreement</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:gap-4">
                     <SignatureInput
                       label="Appraisee Signature"
                       value={formData.targetSignatures?.appraiseeSignature || ''}
@@ -1283,7 +1555,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     />
                   </div>
                   {!isTargetsSubmitted && (
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex justify-end print:hidden">
                       <button
                         onClick={() => handleSubmit('TARGETS_SUBMITTED')}
                         disabled={loading}
@@ -1297,13 +1569,13 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
               )}
 
               {/* Final Signatures */}
-              <div className="border-t border-gray-200 pt-8">
-                <h4 className="text-md font-medium text-gray-900 mb-4">Final Appraisal Agreement</h4>
+              <div className="border-t border-gray-200 pt-8 print:pt-4">
+                <h4 className="text-md font-medium text-gray-900 mb-4 print:mb-2 print:text-sm">Final Appraisal Agreement</h4>
                 
                 {/* Term Signatures */}
-                <div className="mb-6">
+                <div className="mb-6 print:mb-2">
                   <h5 className="text-sm font-bold text-gray-700 mb-2 uppercase">{formData.term || 'Term'}</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:gap-4">
                     <SignatureInput
                       label="Appraisee Signature"
                       value={formData.completionSignatures?.appraiseeSignature || ''}
@@ -1349,14 +1621,14 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                   </div>
                 </div>
 
-                <div className="mt-8 border-t border-gray-200 pt-6 flex flex-col items-center">
-                   <span className="text-gray-900 font-bold uppercase mb-2">Official School Stamp</span>
-                   <div className="border-2 border-gray-800 h-32 w-48 bg-white"></div>
+                <div className="mt-8 border-t border-gray-200 pt-6 flex flex-col items-center break-inside-avoid print:mt-4 print:pt-4">
+                   <span className="text-gray-900 font-bold uppercase mb-2 print:text-sm">Official School Stamp</span>
+                   <div className="border-2 border-gray-800 h-32 w-48 bg-white print:h-24 print:w-36"></div>
                 </div>
 
               </div>
             </div>
-            <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
+            <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 print:hidden">
               {!isCompleted && (
                 <button
                   onClick={() => handleSubmit('COMPLETED')}

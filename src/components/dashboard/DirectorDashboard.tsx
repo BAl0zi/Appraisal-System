@@ -8,7 +8,7 @@ import { createUser, deleteUser } from '@/app/actions/user-actions';
 import { getAssignments } from '@/app/actions/assignment-actions';
 import { seedLeadershipUsers } from '@/app/actions/seed-actions';
 import { approveDeletion, rejectDeletion, resetAppraisalStatus } from '@/app/actions/appraisal-actions';
-import { Trash2, UserPlus, Users, ClipboardList, AlertTriangle, Check, X, RefreshCw, FileText, Database } from 'lucide-react';
+import { Trash2, UserPlus, Users, ClipboardList, AlertTriangle, Check, X, RefreshCw, FileText, Database, Eye } from 'lucide-react';
 import AssignmentManager from '@/components/dashboard/AssignmentManager';
 import AppraiserContent from '@/components/dashboard/AppraiserContent';
 import DashboardLayout from './DashboardLayout';
@@ -532,15 +532,26 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
                               {new Date(appraisal.updated_at).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              {appraisal.status !== 'DRAFT' && (
-                                <button
-                                  onClick={() => handleResetStatus(appraisal.id, 'DRAFT')}
-                                  className="text-orange-600 hover:text-orange-900 flex items-center ml-auto"
-                                  title="Reset to Draft"
-                                >
-                                  <RefreshCw className="h-4 w-4 mr-1" /> Reset
-                                </button>
-                              )}
+                              <div className="flex justify-end space-x-2">
+                                {appraisal.status !== 'DRAFT' && (
+                                  <button
+                                    onClick={() => window.open(`/dashboard/appraisal/${appraisal.appraisee_id}?appraisalId=${appraisal.id}&view=SCORESHEET&hideBack=true`, '_blank')}
+                                    className="text-blue-600 hover:text-blue-900 flex items-center"
+                                    title="View Final Scoresheet"
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" /> View
+                                  </button>
+                                )}
+                                {appraisal.status !== 'DRAFT' && (
+                                  <button
+                                    onClick={() => handleResetStatus(appraisal.id, 'DRAFT')}
+                                    className="text-orange-600 hover:text-orange-900 flex items-center"
+                                    title="Reset to Draft"
+                                  >
+                                    <RefreshCw className="h-4 w-4 mr-1" /> Reset
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -578,6 +589,7 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Appraiser</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                      <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -614,6 +626,17 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
                               {userAppraisal?.overall_score || '-'}
                             </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium print:hidden">
+                              {userAppraisal && userAppraisal.status !== 'DRAFT' && (
+                                <button
+                                  onClick={() => window.open(`/dashboard/appraisal/${user.id}?appraisalId=${userAppraisal.id}&view=SCORESHEET&hideBack=true`, '_blank')}
+                                  className="text-blue-600 hover:text-blue-900 flex items-center ml-auto"
+                                  title="View Final Scoresheet"
+                                >
+                                  <Eye className="h-4 w-4 mr-1" /> View
+                                </button>
+                              )}
+                            </td>
                           </tr>
                         );
                       });
@@ -623,7 +646,7 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
               </div>
             </div>
           ) : activeTab === 'my_appraisals' ? (
-            <AppraiserContent currentUser={currentUser} />
+            <AppraiserContent currentUser={currentUser} initialTab="appraisals" />
           ) : null}
         </div>
       </div>

@@ -113,8 +113,8 @@ export default function SignatureInput({
           </div>
         )}
         
-        <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-xs text-gray-500">
+        <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between print:bg-white print:border-none print:px-0">
+          <div className="text-xs text-gray-500 print:hidden">
             {value ? 'Signed digitally' : 'Please sign in the box above'}
           </div>
           <div className="flex items-center">
@@ -124,9 +124,12 @@ export default function SignatureInput({
               value={date}
               onChange={(e) => onDateChange(e.target.value)}
               disabled={disabled}
-              className="text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1 text-gray-900 bg-white"
+              className="text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1 text-gray-900 bg-white print:hidden"
               aria-label="Signature Date"
             />
+            <span className="hidden print:block text-xs text-gray-900 font-medium">
+              {date || '__________________'}
+            </span>
           </div>
         </div>
       </div>
