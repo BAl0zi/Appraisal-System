@@ -86,10 +86,10 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
 
   const status = existingAppraisal?.status;
   const isCompleted = status === 'COMPLETED' || status === 'SIGNED';
-  const isEvaluationSubmitted = status === 'EVALUATION_SUBMITTED' || isCompleted;
+  const isTargetsSubmitted = status === 'TARGETS_SUBMITTED' || isCompleted;
+  const isEvaluationSubmitted = status === 'EVALUATION_SUBMITTED' || isTargetsSubmitted;
   const isObservationSubmitted = status === 'OBSERVATION_SUBMITTED' || isEvaluationSubmitted;
-  const isTargetsSubmitted = status === 'TARGETS_SUBMITTED' || isObservationSubmitted;
-  const isTargetsSet = status === 'TARGETS_SET' || isTargetsSubmitted;
+  const isTargetsSet = status === 'TARGETS_SET' || isObservationSubmitted;
   
   const effectiveRole = appraisalRole || appraisee.role;
   const roleCategory = getRoleCategory(effectiveRole as UserRole);
