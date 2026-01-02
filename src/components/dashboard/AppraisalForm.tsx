@@ -959,6 +959,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                   }}
                   disabled={isTargetsSet || isCompleted}
                   date={formData.targetSignatures?.appraiseeDate || ''}
+                  onDateChange={(date) => {
+                    setFormData({
+                      ...formData,
+                      targetSignatures: { 
+                        ...formData.targetSignatures, 
+                        appraiseeDate: date
+                      }
+                    });
+                  }}
                 />
                 <SignatureInput
                   label="Appraiser Signature"
@@ -976,6 +985,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                   }}
                   disabled={isTargetsSet || isCompleted}
                   date={formData.targetSignatures?.appraiserDate || ''}
+                  onDateChange={(date) => {
+                    setFormData({
+                      ...formData,
+                      targetSignatures: { 
+                        ...formData.targetSignatures, 
+                        appraiserDate: date
+                      }
+                    });
+                  }}
                 />
               </div>
             </div>
@@ -1005,6 +1023,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     }}
                     disabled={isTargetsSubmitted || isCompleted}
                     date={formData.targetReviewSignatures?.appraiseeDate || ''}
+                    onDateChange={(date) => {
+                      setFormData({
+                        ...formData,
+                        targetReviewSignatures: { 
+                          ...formData.targetReviewSignatures, 
+                          appraiseeDate: date
+                        }
+                      });
+                    }}
                   />
                   <SignatureInput
                     label="Appraiser Signature"
@@ -1022,6 +1049,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     }}
                     disabled={isTargetsSubmitted || isCompleted}
                     date={formData.targetReviewSignatures?.appraiserDate || ''}
+                    onDateChange={(date) => {
+                      setFormData({
+                        ...formData,
+                        targetReviewSignatures: { 
+                          ...formData.targetReviewSignatures, 
+                          appraiserDate: date
+                        }
+                      });
+                    }}
                   />
                 </div>
               </div>
