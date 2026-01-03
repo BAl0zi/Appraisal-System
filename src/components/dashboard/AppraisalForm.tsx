@@ -57,7 +57,14 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
     observation: {
       ratings: {}, // { [index]: 1-4 }
       documents: {}, // { [index]: 'not_available' | 'available' | 'well_kept' }
-      comments: ''
+      comments: '',
+      observationType: '', // 'FIRST' | 'SECOND'
+      classGrade: '',
+      time: '',
+      learnersPresent: '',
+      date: '',
+      subject: '',
+      topic: ''
     },
     evaluation: {
       ratings: {}, // { [index]: 1-4 }
@@ -1114,6 +1121,148 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                 {isTeachingStaff ? 'Tick one box only for each Parameter.' : 'Tick one box only for each Parameter.'}
               </p>
             </div>
+            
+            {/* Lesson Observation Details Form */}
+            {isTeachingStaff && (
+              <div className="px-4 py-5 sm:p-6 bg-gray-50 border-b border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  {/* Observation Type */}
+                  <div className="col-span-1 md:col-span-2 flex space-x-6">
+                    <div className="flex items-center">
+                      <input
+                        id="first-observation"
+                        name="observation-type"
+                        type="radio"
+                        checked={formData.observation?.observationType === 'FIRST'}
+                        onChange={() => setFormData({
+                          ...formData,
+                          observation: { ...formData.observation, observationType: 'FIRST' }
+                        })}
+                        disabled={isCompleted || isObservationSubmitted}
+                        className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+                      />
+                      <label htmlFor="first-observation" className="ml-3 block text-sm font-medium text-gray-700">
+                        FIRST OBSERVATION
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        id="second-observation"
+                        name="observation-type"
+                        type="radio"
+                        checked={formData.observation?.observationType === 'SECOND'}
+                        onChange={() => setFormData({
+                          ...formData,
+                          observation: { ...formData.observation, observationType: 'SECOND' }
+                        })}
+                        disabled={isCompleted || isObservationSubmitted}
+                        className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+                      />
+                      <label htmlFor="second-observation" className="ml-3 block text-sm font-medium text-gray-700">
+                        SECOND OBSERVATION
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Class/Grade */}
+                  <div>
+                    <label htmlFor="class-grade" className="block text-sm font-medium text-gray-700">Class/Grade</label>
+                    <input
+                      type="text"
+                      id="class-grade"
+                      value={formData.observation?.classGrade || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        observation: { ...formData.observation, classGrade: e.target.value }
+                      })}
+                      disabled={isCompleted || isObservationSubmitted}
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    />
+                  </div>
+
+                  {/* Time */}
+                  <div>
+                    <label htmlFor="time" className="block text-sm font-medium text-gray-700">Time</label>
+                    <input
+                      type="time"
+                      id="time"
+                      value={formData.observation?.time || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        observation: { ...formData.observation, time: e.target.value }
+                      })}
+                      disabled={isCompleted || isObservationSubmitted}
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    />
+                  </div>
+
+                  {/* Learners Present */}
+                  <div>
+                    <label htmlFor="learners-present" className="block text-sm font-medium text-gray-700">Learners Present</label>
+                    <input
+                      type="text"
+                      id="learners-present"
+                      value={formData.observation?.learnersPresent || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        observation: { ...formData.observation, learnersPresent: e.target.value }
+                      })}
+                      disabled={isCompleted || isObservationSubmitted}
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    />
+                  </div>
+
+                  {/* Date */}
+                  <div>
+                    <label htmlFor="observation-date" className="block text-sm font-medium text-gray-700">Date</label>
+                    <input
+                      type="date"
+                      id="observation-date"
+                      value={formData.observation?.date || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        observation: { ...formData.observation, date: e.target.value }
+                      })}
+                      disabled={isCompleted || isObservationSubmitted}
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    />
+                  </div>
+
+                  {/* Subject/Learning Area */}
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700">Subject/Learning Area</label>
+                    <input
+                      type="text"
+                      id="subject"
+                      value={formData.observation?.subject || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        observation: { ...formData.observation, subject: e.target.value }
+                      })}
+                      disabled={isCompleted || isObservationSubmitted}
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    />
+                  </div>
+
+                  {/* Topic/Strand */}
+                  <div>
+                    <label htmlFor="topic" className="block text-sm font-medium text-gray-700">Topic/Strand</label>
+                    <input
+                      type="text"
+                      id="topic"
+                      value={formData.observation?.topic || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        observation: { ...formData.observation, topic: e.target.value }
+                      })}
+                      disabled={isCompleted || isObservationSubmitted}
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="px-4 py-5 sm:p-6">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
