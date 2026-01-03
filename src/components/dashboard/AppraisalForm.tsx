@@ -64,7 +64,8 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
       learnersPresent: '',
       date: '',
       subject: '',
-      topic: ''
+      topic: '',
+      workAppraised: ''
     },
     evaluation: {
       ratings: {}, // { [index]: 1-4 }
@@ -664,6 +665,33 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                 <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
                   {isTeachingStaff ? 'B. LESSON OBSERVATION' : 'C. WORK OBSERVATION'}
                 </h3>
+
+                {/* Observation Details Header */}
+                <div className="mb-4 grid grid-cols-2 gap-4 text-sm border p-4 rounded bg-gray-50">
+                  <div className="col-span-2 flex space-x-6 border-b pb-2 mb-2">
+                     <span className="font-bold">Observation Type:</span>
+                     <span className="flex items-center"><span className={`inline-block w-4 h-4 border mr-1 ${formData.observation?.observationType === 'FIRST' ? 'bg-black' : ''}`}></span> FIRST OBSERVATION</span>
+                     <span className="flex items-center"><span className={`inline-block w-4 h-4 border mr-1 ${formData.observation?.observationType === 'SECOND' ? 'bg-black' : ''}`}></span> SECOND OBSERVATION</span>
+                  </div>
+                  
+                  <div><span className="font-bold">Appraisee:</span> {appraisee.full_name}</div>
+                  <div><span className="font-bold">Appraiser:</span> {existingAppraisal?.appraiser_name || '_________________'}</div>
+                  
+                  <div><span className="font-bold">Date:</span> {formData.observation?.date || '_________________'}</div>
+                  <div><span className="font-bold">Time:</span> {formData.observation?.time || '_________________'}</div>
+                  
+                  {isTeachingStaff ? (
+                    <>
+                      <div><span className="font-bold">Class/Grade:</span> {formData.observation?.classGrade || '_________________'}</div>
+                      <div><span className="font-bold">Subject:</span> {formData.observation?.subject || '_________________'}</div>
+                      <div><span className="font-bold">Topic:</span> {formData.observation?.topic || '_________________'}</div>
+                      <div><span className="font-bold">Learners Present:</span> {formData.observation?.learnersPresent || '_________________'}</div>
+                    </>
+                  ) : (
+                    <div className="col-span-2"><span className="font-bold">Work Appraised:</span> {formData.observation?.workAppraised || '_________________'}</div>
+                  )}
+                </div>
+
                 <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
                   <thead className="bg-gray-50">
                     <tr>
@@ -1254,6 +1282,99 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                       onChange={(e) => setFormData({
                         ...formData,
                         observation: { ...formData.observation, topic: e.target.value }
+                      })}
+                      disabled={isCompleted || isObservationSubmitted}
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Work Observation Details Form */}
+            {!isTeachingStaff && (
+              <div className="px-4 py-5 sm:p-6 bg-gray-50 border-b border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  {/* Observation Type */}
+                  <div className="col-span-1 md:col-span-2 flex space-x-6">
+                    <div className="flex items-center">
+                      <input
+                        id="first-observation-work"
+                        name="observation-type-work"
+                        type="radio"
+                        checked={formData.observation?.observationType === 'FIRST'}
+                        onChange={() => setFormData({
+                          ...formData,
+                          observation: { ...formData.observation, observationType: 'FIRST' }
+                        })}
+                        disabled={isCompleted || isObservationSubmitted}
+                        className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+                      />
+                      <label htmlFor="first-observation-work" className="ml-3 block text-sm font-medium text-gray-700">
+                        FIRST OBSERVATION
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        id="second-observation-work"
+                        name="observation-type-work"
+                        type="radio"
+                        checked={formData.observation?.observationType === 'SECOND'}
+                        onChange={() => setFormData({
+                          ...formData,
+                          observation: { ...formData.observation, observationType: 'SECOND' }
+                        })}
+                        disabled={isCompleted || isObservationSubmitted}
+                        className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+                      />
+                      <label htmlFor="second-observation-work" className="ml-3 block text-sm font-medium text-gray-700">
+                        SECOND OBSERVATION
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Time */}
+                  <div>
+                    <label htmlFor="time-work" className="block text-sm font-medium text-gray-700">Time</label>
+                    <input
+                      type="time"
+                      id="time-work"
+                      value={formData.observation?.time || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        observation: { ...formData.observation, time: e.target.value }
+                      })}
+                      disabled={isCompleted || isObservationSubmitted}
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    />
+                  </div>
+
+                  {/* Date */}
+                  <div>
+                    <label htmlFor="observation-date-work" className="block text-sm font-medium text-gray-700">Date</label>
+                    <input
+                      type="date"
+                      id="observation-date-work"
+                      value={formData.observation?.date || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        observation: { ...formData.observation, date: e.target.value }
+                      })}
+                      disabled={isCompleted || isObservationSubmitted}
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    />
+                  </div>
+
+                  {/* Work Appraised */}
+                  <div className="col-span-1 md:col-span-2">
+                    <label htmlFor="work-appraised" className="block text-sm font-medium text-gray-700">Work Appraised</label>
+                    <input
+                      type="text"
+                      id="work-appraised"
+                      value={formData.observation?.workAppraised || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        observation: { ...formData.observation, workAppraised: e.target.value }
                       })}
                       disabled={isCompleted || isObservationSubmitted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
