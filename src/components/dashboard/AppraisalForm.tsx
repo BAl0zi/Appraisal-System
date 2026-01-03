@@ -48,17 +48,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
   const [currentView, setCurrentView] = useState<AppraisalView>((initialView as AppraisalView) || 'MENU');
   
   // Initial state from existing appraisal or defaults
-  const [formData, setFormData] = useState(existingAppraisal?.appraisal_data || {
-    term: initialTerm || '',
-    year: initialYear || new Date().getFullYear().toString(),
-    targets: [
-      { id: 1, area: '', target: '', actual: '' }
-    ],
-    observation: {
-      ratings: {}, // { [index]: 1-4 }
-      documents: {}, // { [index]: 'not_available' | 'available' | 'well_kept' }
+  const [formData, setFormData] = useState(() => {
+    const data = existingAppraisal?.appraisal_data || {};
+    
+    // Default observation structure
+    const defaultObs = {
+      ratings: {}, 
+      documents: {}, 
       comments: '',
-      observationType: '', // 'FIRST' | 'SECOND'
+      observationType: 'FIRST',
       classGrade: '',
       time: '',
       learnersPresent: '',
@@ -66,31 +64,45 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
       subject: '',
       topic: '',
       workAppraised: ''
-    },
-    evaluation: {
-      ratings: {}, // { [index]: 1-4 }
-      progressComments: ['', ''],
-      improvementComments: ['', '']
-    },
-    targetSignatures: {
-      appraiseeSignature: '',
-      appraiseeDate: '',
-      appraiserSignature: '',
-      appraiserDate: ''
-    },
-    targetReviewSignatures: {
-      appraiseeSignature: '',
-      appraiseeDate: '',
-      appraiserSignature: '',
-      appraiserDate: ''
-    },
-    completionSignatures: {
-      appraiseeSignature: '',
-      appraiseeDate: '',
-      appraiserSignature: '',
-      appraiserDate: ''
-    }
+    };
+
+    return {
+      term: initialTerm || '',
+      year: initialYear || new Date().getFullYear().toString(),
+      targets: [
+        { id: 1, area: '', target: '', actual: '' }
+      ],
+      // Migrate old single observation to observation1 if needed
+      observation1: data.observation || defaultObs,
+      observation2: data.observation2 || { ...defaultObs, observationType: 'SECOND' },
+      evaluation: {
+        ratings: {}, 
+        progressComments: ['', ''],
+        improvementComments: ['', '']
+      },
+      targetSignatures: {
+        appraiseeSignature: '',
+        appraiseeDate: '',
+        appraiserSignature: '',
+        appraiserDate: ''
+      },
+      targetReviewSignatures: {
+        appraiseeSignature: '',
+        appraiseeDate: '',
+        appraiserSignature: '',
+        appraiserDate: ''
+      },
+      completionSignatures: {
+        appraiseeSignature: '',
+        appraiseeDate: '',
+        appraiserSignature: '',
+        appraiserDate: ''
+      },
+      ...data // Overwrite with existing data, but ensure obs1/obs2 exist
+    };
   });
+
+  const [activeObservation, setActiveObservation] = useState<'FIRST' | 'SECOND'>('FIRST');
 
   const status = existingAppraisal?.status;
   const isCompleted = status === 'COMPLETED' || status === 'SIGNED';
@@ -156,20 +168,32 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
 
   // Observation Calculations
   const calculateObservationStats = () => {
-    const ratings = formData.observation?.ratings || {};
+    const calcScoreAndCounts = (ratings: any) => {
+      let s = 0;
+      const c = { 1: 0, 2: 0, 3: 0, 4: 0 };
+      Object.values(ratings || {}).forEach((rating) => {
+        const r = typeof rating === 'string' ? parseInt(rating) : rating as number;
+        if (r >= 1 && r <= 4) {
+            s += r;
+            c[r as 1|2|3|4]++;
+        }
+      });
+      return { score: s, counts: c };
+    };
+
+    const obs1 = calcScoreAndCounts(formData.observation1?.ratings);
+    const obs2 = calcScoreAndCounts(formData.observation2?.ratings);
     
-    let totalScore = 0;
-    const counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    const hasObs2 = formData.observation2?.ratings && Object.keys(formData.observation2.ratings).length > 0;
+    const totalScore = hasObs2 ? (obs1.score + obs2.score) / 2 : obs1.score;
 
-    Object.values(ratings).forEach((rating) => {
-      const r = typeof rating === 'string' ? parseInt(rating) : rating as number;
-      if (r >= 1 && r <= 4) {
-        totalScore += r;
-        counts[r as 1|2|3|4]++;
-      }
-    });
-
-    return { totalScore, counts };
+    return { 
+        score1: obs1.score, 
+        counts1: obs1.counts,
+        score2: obs2.score, 
+        counts2: obs2.counts,
+        totalScore: parseFloat(totalScore.toFixed(1)) 
+    };
   };
 
   const observationStats = calculateObservationStats();
@@ -213,12 +237,13 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
 
   const handleObservationRating = (index: number, rating: number) => {
     if (isCompleted || isObservationSubmitted) return;
+    const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
     setFormData({
       ...formData,
-      observation: {
-        ...formData.observation,
+      [key]: {
+        ...formData[key],
         ratings: {
-          ...formData.observation?.ratings,
+          ...formData[key]?.ratings,
           [index]: rating
         }
       }
@@ -227,12 +252,13 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
 
   const handleDocumentRating = (index: number, status: string) => {
     if (isCompleted || isObservationSubmitted) return;
+    const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
     setFormData({
       ...formData,
-      observation: {
-        ...formData.observation,
+      [key]: {
+        ...formData[key],
         documents: {
-          ...formData.observation?.documents,
+          ...formData[key]?.documents,
           [index]: status
         }
       }
@@ -378,18 +404,34 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
     // Validation: Check Observation Parameters (Required for Saving in Observation View or Completing)
     if (status === 'OBSERVATION_SUBMITTED' || status === 'COMPLETED') {
       const params = isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
-      const ratings = formData.observation?.ratings || {};
       
-      // Check if all parameters have a rating
-      const missingIndex = params.findIndex((_, index) => !ratings[index]);
+      // Validate Observation 1 (Mandatory)
+      const ratings1 = formData.observation1?.ratings || {};
+      const missingIndex1 = params.findIndex((_, index) => !ratings1[index]);
       
-      if (missingIndex !== -1) {
+      if (missingIndex1 !== -1) {
         setMessage({ 
           type: 'error', 
-          text: `Please rate all observation parameters before saving. (Missing item ${missingIndex + 1})` 
+          text: `Please rate all parameters for First Observation. (Missing item ${missingIndex1 + 1})` 
         });
         setLoading(false);
         return;
+      }
+
+      // Validate Observation 2 (Optional, but if started, must be complete)
+      const ratings2 = formData.observation2?.ratings || {};
+      const hasObs2 = Object.keys(ratings2).length > 0 || formData.observation2?.date;
+      
+      if (hasObs2) {
+          const missingIndex2 = params.findIndex((_, index) => !ratings2[index]);
+          if (missingIndex2 !== -1) {
+            setMessage({ 
+                type: 'error', 
+                text: `Please rate all parameters for Second Observation. (Missing item ${missingIndex2 + 1})` 
+            });
+            setLoading(false);
+            return;
+          }
       }
     }
 
@@ -660,35 +702,40 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
           )}
 
           {/* Observation Section */}
-          {!isSeniorLeadership && (
-             <div className="break-inside-avoid">
+          {!isSeniorLeadership && ['observation1', 'observation2'].map((obsKey, obsIndex) => {
+             const obsData = formData[obsKey];
+             // Only show second observation if it has data (check date or ratings)
+             const hasData = obsData && (obsData.date || Object.keys(obsData.ratings || {}).length > 0);
+             if (obsKey === 'observation2' && !hasData) return null;
+             
+             return (
+             <div key={obsKey} className="break-inside-avoid mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-                  {isTeachingStaff ? 'B. LESSON OBSERVATION' : 'C. WORK OBSERVATION'}
+                  {isTeachingStaff ? `B${obsIndex+1}. LESSON OBSERVATION (${obsIndex === 0 ? 'FIRST' : 'SECOND'})` : `C${obsIndex+1}. WORK OBSERVATION (${obsIndex === 0 ? 'FIRST' : 'SECOND'})`}
                 </h3>
 
                 {/* Observation Details Header */}
                 <div className="mb-4 grid grid-cols-2 gap-4 text-sm border p-4 rounded bg-gray-50">
                   <div className="col-span-2 flex space-x-6 border-b pb-2 mb-2">
                      <span className="font-bold">Observation Type:</span>
-                     <span className="flex items-center"><span className={`inline-block w-4 h-4 border mr-1 ${formData.observation?.observationType === 'FIRST' ? 'bg-black' : ''}`}></span> FIRST OBSERVATION</span>
-                     <span className="flex items-center"><span className={`inline-block w-4 h-4 border mr-1 ${formData.observation?.observationType === 'SECOND' ? 'bg-black' : ''}`}></span> SECOND OBSERVATION</span>
+                     <span className="font-bold uppercase">{obsIndex === 0 ? 'FIRST' : 'SECOND'} OBSERVATION</span>
                   </div>
                   
                   <div><span className="font-bold">Appraisee:</span> {appraisee.full_name}</div>
                   <div><span className="font-bold">Appraiser:</span> {existingAppraisal?.appraiser_name || '_________________'}</div>
                   
-                  <div><span className="font-bold">Date:</span> {formData.observation?.date || '_________________'}</div>
-                  <div><span className="font-bold">Time:</span> {formData.observation?.time || '_________________'}</div>
+                  <div><span className="font-bold">Date:</span> {obsData?.date || '_________________'}</div>
+                  <div><span className="font-bold">Time:</span> {obsData?.time || '_________________'}</div>
                   
                   {isTeachingStaff ? (
                     <>
-                      <div><span className="font-bold">Class/Grade:</span> {formData.observation?.classGrade || '_________________'}</div>
-                      <div><span className="font-bold">Subject:</span> {formData.observation?.subject || '_________________'}</div>
-                      <div><span className="font-bold">Topic:</span> {formData.observation?.topic || '_________________'}</div>
-                      <div><span className="font-bold">Learners Present:</span> {formData.observation?.learnersPresent || '_________________'}</div>
+                      <div><span className="font-bold">Class/Grade:</span> {obsData?.classGrade || '_________________'}</div>
+                      <div><span className="font-bold">Subject:</span> {obsData?.subject || '_________________'}</div>
+                      <div><span className="font-bold">Topic:</span> {obsData?.topic || '_________________'}</div>
+                      <div><span className="font-bold">Learners Present:</span> {obsData?.learnersPresent || '_________________'}</div>
                     </>
                   ) : (
-                    <div className="col-span-2"><span className="font-bold">Work Appraised:</span> {formData.observation?.workAppraised || '_________________'}</div>
+                    <div className="col-span-2"><span className="font-bold">Work Appraised:</span> {obsData?.workAppraised || '_________________'}</div>
                   )}
                 </div>
 
@@ -704,14 +751,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                       <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                         <td className="px-4 py-2 text-sm text-gray-900 border-r">{index + 1}. {param}</td>
                         <td className="px-4 py-2 text-center text-sm text-gray-900 font-medium">
-                          {formData.observation?.ratings?.[index] || '-'}
+                          {obsData?.ratings?.[index] || '-'}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
              </div>
-          )}
+             );
+          })}
 
           {/* Professional Documents (Teaching Staff Only) */}
           {isTeachingStaff && (
@@ -729,7 +777,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                       <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                         <td className="px-4 py-2 text-sm text-gray-900 border-r">{index + 1}. {doc}</td>
                         <td className="px-4 py-2 text-center text-sm text-gray-900 font-medium capitalize">
-                          {(formData.observation?.documents?.[index] || 'not_available').replace('_', ' ')}
+                          {(formData.observation1?.documents?.[index] || 'not_available').replace('_', ' ')}
                         </td>
                       </tr>
                     ))}
@@ -769,8 +817,17 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
             
             <div className="mb-6">
               <h4 className="text-md font-bold text-gray-800 mb-2">Observation Comments</h4>
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[80px]">
-                {formData.observation?.comments || 'No comments provided.'}
+              <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[60px]">
+                    <p className="text-xs font-bold text-gray-500 uppercase mb-1">First Observation</p>
+                    {formData.observation1?.comments || 'No comments provided.'}
+                  </div>
+                  {(formData.observation2?.comments || (formData.observation2?.ratings && Object.keys(formData.observation2.ratings).length > 0)) && (
+                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[60px]">
+                        <p className="text-xs font-bold text-gray-500 uppercase mb-1">Second Observation</p>
+                        {formData.observation2?.comments || 'No comments provided.'}
+                      </div>
+                  )}
               </div>
             </div>
 
@@ -807,12 +864,28 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                       </tr>
                     )}
                     {!isSeniorLeadership && (
-                      <tr>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
-                          {isTeachingStaff ? 'LESSON OBSERVATION' : 'WORK OBSERVATION'}
-                        </td>
-                        <td className="px-6 py-4 text-center text-sm text-gray-900">{observationStats.totalScore}</td>
-                      </tr>
+                      <>
+                        <tr>
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                            {isTeachingStaff ? 'LESSON OBSERVATION (1st)' : 'WORK OBSERVATION (1st)'}
+                          </td>
+                          <td className="px-6 py-4 text-center text-sm text-gray-900">{observationStats.score1}</td>
+                        </tr>
+                        {observationStats.score2 > 0 && (
+                            <tr>
+                              <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
+                                {isTeachingStaff ? 'LESSON OBSERVATION (2nd)' : 'WORK OBSERVATION (2nd)'}
+                              </td>
+                              <td className="px-6 py-4 text-center text-sm text-gray-900">{observationStats.score2}</td>
+                            </tr>
+                        )}
+                        <tr className="bg-gray-50">
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300 font-bold">
+                            OBSERVATION FINAL SCORE
+                          </td>
+                          <td className="px-6 py-4 text-center text-sm text-gray-900 font-bold">{observationStats.totalScore}</td>
+                        </tr>
+                      </>
                     )}
                     <tr>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">EMPLOYEE EVALUATION</td>
@@ -1150,59 +1223,50 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
               </p>
             </div>
             
+            {/* Observation Tabs */}
+            <div className="border-b border-gray-200 bg-white px-4">
+              <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                <button
+                  onClick={() => setActiveObservation('FIRST')}
+                  className={`${
+                    activeObservation === 'FIRST'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  First Observation
+                </button>
+                <button
+                  onClick={() => setActiveObservation('SECOND')}
+                  className={`${
+                    activeObservation === 'SECOND'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  Second Observation
+                </button>
+              </nav>
+            </div>
+            
             {/* Lesson Observation Details Form */}
             {isTeachingStaff && (
               <div className="px-4 py-5 sm:p-6 bg-gray-50 border-b border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  {/* Observation Type */}
-                  <div className="col-span-1 md:col-span-2 flex space-x-6">
-                    <div className="flex items-center">
-                      <input
-                        id="first-observation"
-                        name="observation-type"
-                        type="radio"
-                        checked={formData.observation?.observationType === 'FIRST'}
-                        onChange={() => setFormData({
-                          ...formData,
-                          observation: { ...formData.observation, observationType: 'FIRST' }
-                        })}
-                        disabled={isCompleted || isObservationSubmitted}
-                        className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
-                      />
-                      <label htmlFor="first-observation" className="ml-3 block text-sm font-medium text-gray-700">
-                        FIRST OBSERVATION
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        id="second-observation"
-                        name="observation-type"
-                        type="radio"
-                        checked={formData.observation?.observationType === 'SECOND'}
-                        onChange={() => setFormData({
-                          ...formData,
-                          observation: { ...formData.observation, observationType: 'SECOND' }
-                        })}
-                        disabled={isCompleted || isObservationSubmitted}
-                        className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
-                      />
-                      <label htmlFor="second-observation" className="ml-3 block text-sm font-medium text-gray-700">
-                        SECOND OBSERVATION
-                      </label>
-                    </div>
-                  </div>
-
                   {/* Class/Grade */}
                   <div>
                     <label htmlFor="class-grade" className="block text-sm font-medium text-gray-700">Class/Grade</label>
                     <input
                       type="text"
                       id="class-grade"
-                      value={formData.observation?.classGrade || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        observation: { ...formData.observation, classGrade: e.target.value }
-                      })}
+                      value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.classGrade || ''}
+                      onChange={(e) => {
+                        const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
+                        setFormData({
+                          ...formData,
+                          [key]: { ...formData[key], classGrade: e.target.value }
+                        });
+                      }}
                       disabled={isCompleted || isObservationSubmitted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
@@ -1214,11 +1278,14 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     <input
                       type="time"
                       id="time"
-                      value={formData.observation?.time || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        observation: { ...formData.observation, time: e.target.value }
-                      })}
+                      value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.time || ''}
+                      onChange={(e) => {
+                        const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
+                        setFormData({
+                          ...formData,
+                          [key]: { ...formData[key], time: e.target.value }
+                        });
+                      }}
                       disabled={isCompleted || isObservationSubmitted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
@@ -1230,11 +1297,14 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     <input
                       type="text"
                       id="learners-present"
-                      value={formData.observation?.learnersPresent || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        observation: { ...formData.observation, learnersPresent: e.target.value }
-                      })}
+                      value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.learnersPresent || ''}
+                      onChange={(e) => {
+                        const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
+                        setFormData({
+                          ...formData,
+                          [key]: { ...formData[key], learnersPresent: e.target.value }
+                        });
+                      }}
                       disabled={isCompleted || isObservationSubmitted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
@@ -1246,11 +1316,14 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     <input
                       type="date"
                       id="observation-date"
-                      value={formData.observation?.date || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        observation: { ...formData.observation, date: e.target.value }
-                      })}
+                      value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.date || ''}
+                      onChange={(e) => {
+                        const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
+                        setFormData({
+                          ...formData,
+                          [key]: { ...formData[key], date: e.target.value }
+                        });
+                      }}
                       disabled={isCompleted || isObservationSubmitted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
@@ -1262,11 +1335,14 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     <input
                       type="text"
                       id="subject"
-                      value={formData.observation?.subject || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        observation: { ...formData.observation, subject: e.target.value }
-                      })}
+                      value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.subject || ''}
+                      onChange={(e) => {
+                        const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
+                        setFormData({
+                          ...formData,
+                          [key]: { ...formData[key], subject: e.target.value }
+                        });
+                      }}
                       disabled={isCompleted || isObservationSubmitted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
@@ -1278,11 +1354,14 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     <input
                       type="text"
                       id="topic"
-                      value={formData.observation?.topic || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        observation: { ...formData.observation, topic: e.target.value }
-                      })}
+                      value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.topic || ''}
+                      onChange={(e) => {
+                        const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
+                        setFormData({
+                          ...formData,
+                          [key]: { ...formData[key], topic: e.target.value }
+                        });
+                      }}
                       disabled={isCompleted || isObservationSubmitted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
@@ -1295,55 +1374,20 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
             {!isTeachingStaff && (
               <div className="px-4 py-5 sm:p-6 bg-gray-50 border-b border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  {/* Observation Type */}
-                  <div className="col-span-1 md:col-span-2 flex space-x-6">
-                    <div className="flex items-center">
-                      <input
-                        id="first-observation-work"
-                        name="observation-type-work"
-                        type="radio"
-                        checked={formData.observation?.observationType === 'FIRST'}
-                        onChange={() => setFormData({
-                          ...formData,
-                          observation: { ...formData.observation, observationType: 'FIRST' }
-                        })}
-                        disabled={isCompleted || isObservationSubmitted}
-                        className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
-                      />
-                      <label htmlFor="first-observation-work" className="ml-3 block text-sm font-medium text-gray-700">
-                        FIRST OBSERVATION
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        id="second-observation-work"
-                        name="observation-type-work"
-                        type="radio"
-                        checked={formData.observation?.observationType === 'SECOND'}
-                        onChange={() => setFormData({
-                          ...formData,
-                          observation: { ...formData.observation, observationType: 'SECOND' }
-                        })}
-                        disabled={isCompleted || isObservationSubmitted}
-                        className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
-                      />
-                      <label htmlFor="second-observation-work" className="ml-3 block text-sm font-medium text-gray-700">
-                        SECOND OBSERVATION
-                      </label>
-                    </div>
-                  </div>
-
                   {/* Time */}
                   <div>
                     <label htmlFor="time-work" className="block text-sm font-medium text-gray-700">Time</label>
                     <input
                       type="time"
                       id="time-work"
-                      value={formData.observation?.time || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        observation: { ...formData.observation, time: e.target.value }
-                      })}
+                      value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.time || ''}
+                      onChange={(e) => {
+                        const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
+                        setFormData({
+                          ...formData,
+                          [key]: { ...formData[key], time: e.target.value }
+                        });
+                      }}
                       disabled={isCompleted || isObservationSubmitted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
@@ -1355,11 +1399,14 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     <input
                       type="date"
                       id="observation-date-work"
-                      value={formData.observation?.date || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        observation: { ...formData.observation, date: e.target.value }
-                      })}
+                      value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.date || ''}
+                      onChange={(e) => {
+                        const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
+                        setFormData({
+                          ...formData,
+                          [key]: { ...formData[key], date: e.target.value }
+                        });
+                      }}
                       disabled={isCompleted || isObservationSubmitted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
@@ -1371,11 +1418,14 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                     <input
                       type="text"
                       id="work-appraised"
-                      value={formData.observation?.workAppraised || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        observation: { ...formData.observation, workAppraised: e.target.value }
-                      })}
+                      value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.workAppraised || ''}
+                      onChange={(e) => {
+                        const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
+                        setFormData({
+                          ...formData,
+                          [key]: { ...formData[key], workAppraised: e.target.value }
+                        });
+                      }}
                       disabled={isCompleted || isObservationSubmitted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                     />
@@ -1407,7 +1457,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                             <input
                               type="radio"
                               name={`observation-rating-${index}`}
-                              checked={formData.observation?.ratings?.[index] === rating}
+                              checked={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.ratings?.[index] === rating}
                               onChange={() => handleObservationRating(index, rating)}
                               disabled={isCompleted || isObservationSubmitted}
                               className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 disabled:opacity-50"
@@ -1421,22 +1471,22 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                   <tfoot className="bg-gray-100 font-medium">
                     <tr>
                       <td className="px-6 py-4 text-right">COUNT (x1, x2, x3, x4)</td>
-                      <td className="px-2 py-4 text-center">{observationStats.counts[1]}</td>
-                      <td className="px-2 py-4 text-center">{observationStats.counts[2]}</td>
-                      <td className="px-2 py-4 text-center">{observationStats.counts[3]}</td>
-                      <td className="px-2 py-4 text-center">{observationStats.counts[4]}</td>
+                      <td className="px-2 py-4 text-center">{(activeObservation === 'FIRST' ? observationStats.counts1 : observationStats.counts2)[1]}</td>
+                      <td className="px-2 py-4 text-center">{(activeObservation === 'FIRST' ? observationStats.counts1 : observationStats.counts2)[2]}</td>
+                      <td className="px-2 py-4 text-center">{(activeObservation === 'FIRST' ? observationStats.counts1 : observationStats.counts2)[3]}</td>
+                      <td className="px-2 py-4 text-center">{(activeObservation === 'FIRST' ? observationStats.counts1 : observationStats.counts2)[4]}</td>
                     </tr>
                     <tr>
                       <td className="px-6 py-4 text-right">Parameters Marks</td>
-                      <td className="px-2 py-4 text-center">{observationStats.counts[1] * 1}</td>
-                      <td className="px-2 py-4 text-center">{observationStats.counts[2] * 2}</td>
-                      <td className="px-2 py-4 text-center">{observationStats.counts[3] * 3}</td>
-                      <td className="px-2 py-4 text-center">{observationStats.counts[4] * 4}</td>
+                      <td className="px-2 py-4 text-center">{(activeObservation === 'FIRST' ? observationStats.counts1 : observationStats.counts2)[1] * 1}</td>
+                      <td className="px-2 py-4 text-center">{(activeObservation === 'FIRST' ? observationStats.counts1 : observationStats.counts2)[2] * 2}</td>
+                      <td className="px-2 py-4 text-center">{(activeObservation === 'FIRST' ? observationStats.counts1 : observationStats.counts2)[3] * 3}</td>
+                      <td className="px-2 py-4 text-center">{(activeObservation === 'FIRST' ? observationStats.counts1 : observationStats.counts2)[4] * 4}</td>
                     </tr>
                     <tr className="bg-blue-50 border-t-2 border-blue-200">
-                      <td className="px-6 py-4 text-right font-bold text-blue-900">FINAL OBSERVATION SCORE</td>
+                      <td className="px-6 py-4 text-right font-bold text-blue-900">TOTAL SCORE ({activeObservation} OBSERVATION)</td>
                       <td colSpan={4} className="px-6 py-4 text-center font-bold text-xl text-blue-600">
-                        {observationStats.totalScore}
+                        {activeObservation === 'FIRST' ? observationStats.score1 : observationStats.score2}
                       </td>
                     </tr>
                   </tfoot>
@@ -1473,7 +1523,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                               <input
                                 type="radio"
                                 name={`document-status-${index}`}
-                                checked={formData.observation?.documents?.[index] === status}
+                                checked={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.documents?.[index] === status}
                                 onChange={() => handleDocumentRating(index, status)}
                                 disabled={isCompleted || isObservationSubmitted}
                                 className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 disabled:opacity-50"
@@ -1499,11 +1549,14 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                 rows={4}
                 className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
                 placeholder="Enter any additional observations here..."
-                value={formData.observation?.comments || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  observation: { ...formData.observation, comments: e.target.value }
-                })}
+                value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.comments || ''}
+                onChange={(e) => {
+                  const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
+                  setFormData({
+                    ...formData,
+                    [key]: { ...formData[key], comments: e.target.value }
+                  });
+                }}
                 disabled={isCompleted}
               />
             </div>
