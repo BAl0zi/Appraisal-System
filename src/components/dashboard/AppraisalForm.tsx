@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { saveAppraisal } from '@/app/actions/appraisal-actions';
-import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, Printer, Download, CheckCircle } from 'lucide-react';
+import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, Printer, Download, CheckCircle, ClipboardList } from 'lucide-react';
 import SignatureInput from '../SignatureInput';
 import { getRoleCategory, UserRole } from '@/constants/roles';
 import { LESSON_OBSERVATION_PARAMETERS, WORK_OBSERVATION_PARAMETERS, PROFESSIONAL_DOCUMENTS } from '@/constants/observation-criteria';
@@ -13,8 +13,10 @@ import { TEACHING_EVALUATION_PARAMETERS, NON_TEACHING_EVALUATION_PARAMETERS, SEN
 interface Target {
   id: number;
   area: string;
+  description?: string;
   target: string;
   actual: string;
+  actualDescription?: string;
 }
 
 interface AppraisalFormProps {
@@ -63,17 +65,18 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
       date: '',
       subject: '',
       topic: '',
-      workAppraised: ''
+      workAppraised: '',
+      status: 'PENDING' // 'PENDING' | 'COMPLETED'
     };
 
     return {
       term: initialTerm || '',
       year: initialYear || new Date().getFullYear().toString(),
       targets: [
-        { id: 1, area: '', target: '', actual: '' }
+        { id: 1, area: '', description: '', target: '', actual: '', actualDescription: '' }
       ],
       // Migrate old single observation to observation1 if needed
-      observation1: data.observation || defaultObs,
+      observation1: data.observation1 || data.observation || defaultObs,
       observation2: data.observation2 || { ...defaultObs, observationType: 'SECOND' },
       evaluation: {
         ratings: {}, 
@@ -103,6 +106,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
   });
 
   const [activeObservation, setActiveObservation] = useState<'FIRST' | 'SECOND'>('FIRST');
+  const [observationViewMode, setObservationViewMode] = useState<'SELECTION' | 'FORM'>('SELECTION');
 
   const status = existingAppraisal?.status;
   const isCompleted = status === 'COMPLETED' || status === 'SIGNED';
@@ -124,6 +128,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
   const showTargets = roleCategory !== 'NON_TEACHING';
   const isTeachingStaff = roleCategory === 'TEACHING';
   const isSeniorLeadership = roleCategory === 'SENIOR_LEADERSHIP' || roleCategory === 'DIRECTOR';
+  const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING';
 
   // Helper to get correct evaluation parameters
   const getEvaluationParameters = () => {
@@ -224,7 +229,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
     const newId = targets.length > 0 ? Math.max(...targets.map((t: Target) => t.id)) + 1 : 1;
     setFormData({
       ...formData,
-      targets: [...targets, { id: newId, area: '', target: '', actual: '' }]
+      targets: [...targets, { id: newId, area: '', description: '', target: '', actual: '', actualDescription: '' }]
     });
   };
 
@@ -289,8 +294,8 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
       maxTargets = 33;
     }
 
-    // Only Senior Leadership and Directors skip observation
-    if (!isSeniorLeadership) {
+    // Only Teaching and Non-Teaching staff have observations
+    if (showObservations) {
       maxObservation = observationParams.length * 4;
     }
 
@@ -307,7 +312,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
       total += targetStats.marks;
     }
     // Only add observation score if applicable
-    if (!isSeniorLeadership) {
+    if (showObservations) {
       total += observationStats.totalScore;
     }
     total += evaluationStats.totalScore;
@@ -340,6 +345,72 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
     setTimeout(() => {
       window.print();
     }, 100);
+  };
+
+  const handleMarkObservationComplete = async (obsNum: 1 | 2) => {
+    setLoading(true);
+    setMessage(null);
+
+    const params = isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+    const obsKey = obsNum === 1 ? 'observation1' : 'observation2';
+    const currentObs = formData[obsKey];
+    
+    // Validate
+    const ratings = currentObs?.ratings || {};
+    const missingIndex = params.findIndex((_, index) => !ratings[index]);
+    
+    if (missingIndex !== -1) {
+      setMessage({ 
+        type: 'error', 
+        text: `Please rate all parameters for ${obsNum === 1 ? 'First' : 'Second'} Observation before marking as complete. (Missing item ${missingIndex + 1})` 
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (!currentObs?.date) {
+        setMessage({ 
+            type: 'error', 
+            text: `Please select a date for the ${obsNum === 1 ? 'First' : 'Second'} Observation.` 
+        });
+        setLoading(false);
+        return;
+    }
+
+    // Update status in local state
+    const updatedFormData = {
+        ...formData,
+        [obsKey]: {
+            ...currentObs,
+            status: 'COMPLETED'
+        }
+    };
+    setFormData(updatedFormData);
+
+    // Save to backend
+    const overallScore = calculateTotalScore(); // Note: Uses current state, might be slightly stale but acceptable for intermediate save
+    
+    const payload = new FormData();
+    payload.append('appraiserId', appraiserId);
+    payload.append('appraiseeId', appraisee.id);
+    if (existingAppraisal?.id) {
+      payload.append('appraisalId', existingAppraisal.id);
+    }
+    // Keep existing status
+    payload.append('status', existingAppraisal?.status || 'DRAFT'); 
+    payload.append('role', effectiveRole);
+    payload.append('appraisalData', JSON.stringify(updatedFormData));
+    payload.append('overallScore', overallScore.toString());
+
+    const result = await saveAppraisal(payload);
+
+    if (result.success) {
+        setMessage({ type: 'success', text: `${obsNum === 1 ? 'First' : 'Second'} Observation marked as completed.` });
+        setObservationViewMode('SELECTION');
+    } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to save observation status.' });
+    }
+    setLoading(false);
   };
 
   const handleSubmit = async (status: string) => {
@@ -539,12 +610,17 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
             </button>
           )}
 
-          {/* 2. Lesson/Work Observation */}
+          {/* 2. First Lesson/Work Observation */}
+          {showObservations && (
           <button
-            onClick={() => setCurrentView('OBSERVATION')}
+            onClick={() => {
+              setActiveObservation('FIRST');
+              setObservationViewMode('FORM');
+              setCurrentView('OBSERVATION');
+            }}
             className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all group text-center relative"
           >
-            {isObservationSubmitted && (
+            {formData.observation1?.status === 'COMPLETED' && (
               <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
                 <CheckCircle className="h-4 w-4 mr-1" /> Completed
               </div>
@@ -552,11 +628,35 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
             <div className="p-4 bg-purple-50 rounded-full mb-4 group-hover:bg-purple-100">
               <Eye className="h-8 w-8 text-purple-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">{isTeachingStaff ? 'Lesson Observation' : 'Work Observation'}</h3>
-            <p className="text-sm text-gray-500 mt-2">Record observations and feedback.</p>
+            <h3 className="text-lg font-semibold text-gray-900">{isTeachingStaff ? 'First Lesson Observation' : 'First Work Observation'}</h3>
+            <p className="text-sm text-gray-500 mt-2">Record first observation and feedback.</p>
           </button>
+          )}
 
-          {/* 3. Employee Evaluation */}
+          {/* 3. Second Lesson/Work Observation */}
+          {showObservations && (
+          <button
+            onClick={() => {
+              setActiveObservation('SECOND');
+              setObservationViewMode('FORM');
+              setCurrentView('OBSERVATION');
+            }}
+            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all group text-center relative"
+          >
+            {formData.observation2?.status === 'COMPLETED' && (
+              <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
+                <CheckCircle className="h-4 w-4 mr-1" /> Completed
+              </div>
+            )}
+            <div className="p-4 bg-purple-50 rounded-full mb-4 group-hover:bg-purple-100">
+              <Eye className="h-8 w-8 text-purple-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">{isTeachingStaff ? 'Second Lesson Observation' : 'Second Work Observation'}</h3>
+            <p className="text-sm text-gray-500 mt-2">Record second observation and feedback.</p>
+          </button>
+          )}
+
+          {/* 4. Employee Evaluation */}
           <button
             onClick={() => setCurrentView('EVALUATION')}
             className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-orange-500 hover:shadow-md transition-all group text-center relative"
@@ -573,7 +673,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
             <p className="text-sm text-gray-500 mt-2">Evaluate competencies and general performance.</p>
           </button>
 
-          {/* 4. Final Scoresheet */}
+          {/* 5. Final Scoresheet */}
           <button
             onClick={() => setCurrentView('SCORESHEET')}
             className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-green-500 hover:shadow-md transition-all group text-center relative"
@@ -590,6 +690,20 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
             <p className="text-sm text-gray-500 mt-2">Review scores, sign, and submit the final appraisal.</p>
           </button>
         </div>
+
+        {/* Submit Observations Action */}
+        {showObservations && !isObservationSubmitted && (formData.observation1?.status === 'COMPLETED') && (
+            <div className="mt-8 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => handleSubmit('OBSERVATION_SUBMITTED')}
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  disabled={loading}
+                >
+                  {loading ? 'Submitting...' : 'Submit All Observations & Proceed to Evaluation'}
+                </button>
+            </div>
+        )}
       </div>
     );
   }
@@ -676,10 +790,11 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
               <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Area</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Target</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Actual</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">%</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r w-1/4">Area & Description</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r w-1/6">Target</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r w-1/6">Actual</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r w-1/4">Remarks</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-1/12">%</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -689,9 +804,13 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         : '0.0';
                      return (
                       <tr key={target.id}>
-                        <td className="px-4 py-2 text-sm text-gray-900 border-r">{target.area}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900 border-r">
+                          <div className="font-bold">{target.area}</div>
+                          <div className="text-xs text-gray-500 mt-1">{target.description}</div>
+                        </td>
                         <td className="px-4 py-2 text-sm text-gray-900 border-r">{target.target}</td>
                         <td className="px-4 py-2 text-sm text-gray-900 border-r">{target.actual}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900 border-r text-xs">{target.actualDescription}</td>
                         <td className="px-4 py-2 text-sm text-gray-900">{pct}%</td>
                       </tr>
                      );
@@ -700,7 +819,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
               </table>
             </div>
           )}
-
+showObservations
           {/* Observation Section */}
           {!isSeniorLeadership && ['observation1', 'observation2'].map((obsKey, obsIndex) => {
              const obsData = formData[obsKey];
@@ -789,7 +908,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
           {/* Evaluation Section */}
           <div className="break-inside-avoid">
             <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-               {isSeniorLeadership ? 'D. EMPLOYEE EVALUATION' : 'D. EMPLOYEE EVALUATION'}
+               D. EMPLOYEE EVALUATION
             </h3>
             <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
               <thead className="bg-gray-50">
@@ -863,7 +982,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         <td className="px-6 py-4 text-center text-sm text-gray-900">{targetStats.marks}</td>
                       </tr>
                     )}
-                    {!isSeniorLeadership && (
+                    {showObservations && (
                       <>
                         <tr>
                           <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
@@ -968,10 +1087,11 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Area</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target (%)</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actual (%)</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Achieved</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Area & Description</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Target (%)</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Actual (%)</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Remarks</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">% Achieved</th>
                       {!isTargetsSet && !isCompleted && <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>}
                     </tr>
                   </thead>
@@ -984,21 +1104,36 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                       return (
                         <tr key={target.id}>
                           <td className="px-6 py-4">
-                            <input
-                              type="text"
-                              value={target.area}
-                              onChange={(e) => {
-                                const newTargets = formData.targets.map((t: Target) => 
-                                  t.id === target.id ? { ...t, area: e.target.value } : t
-                                );
-                                setFormData({ ...formData, targets: newTargets });
-                              }}
-                              disabled={isTargetsSet || isCompleted}
-                              className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
-                              placeholder="Area of focus"
-                            />
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                value={target.area}
+                                onChange={(e) => {
+                                  const newTargets = formData.targets.map((t: Target) => 
+                                    t.id === target.id ? { ...t, area: e.target.value } : t
+                                  );
+                                  setFormData({ ...formData, targets: newTargets });
+                                }}
+                                disabled={isTargetsSet || isCompleted}
+                                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white font-bold"
+                                placeholder="Area of focus"
+                              />
+                              <textarea
+                                value={target.description || ''}
+                                onChange={(e) => {
+                                  const newTargets = formData.targets.map((t: Target) => 
+                                    t.id === target.id ? { ...t, description: e.target.value } : t
+                                  );
+                                  setFormData({ ...formData, targets: newTargets });
+                                }}
+                                disabled={isTargetsSet || isCompleted}
+                                rows={2}
+                                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-xs border-gray-300 rounded-md disabled:bg-gray-100 text-gray-600 bg-white"
+                                placeholder="Description of the target..."
+                              />
+                            </div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-4 align-top">
                             <input
                               type="number"
                               value={target.target}
@@ -1013,7 +1148,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                               placeholder="Target (%)"
                             />
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-4 align-top">
                             <input
                               type="number"
                               value={target.actual}
@@ -1028,11 +1163,26 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                               placeholder={!isTargetsSet ? "Set targets first" : "Actual (%)"}
                             />
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 align-top">
+                             <textarea
+                                value={target.actualDescription || ''}
+                                onChange={(e) => {
+                                  const newTargets = formData.targets.map((t: Target) => 
+                                    t.id === target.id ? { ...t, actualDescription: e.target.value } : t
+                                  );
+                                  setFormData({ ...formData, targets: newTargets });
+                                }}
+                                disabled={!isTargetsSet || isTargetsSubmitted || isCompleted}
+                                rows={3}
+                                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-xs border-gray-300 rounded-md disabled:bg-gray-100 text-gray-600 bg-white"
+                                placeholder={!isTargetsSet ? "Set targets first" : "Explain why target was reached or not..."}
+                              />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-top">
                             {pct}%
                           </td>
                           {!isTargetsSet && !isCompleted && (
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
                               <button onClick={() => removeTarget(target.id)} className="text-red-600 hover:text-red-900" aria-label="Remove Target">
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -1213,6 +1363,8 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
       {/* OBSERVATION VIEW */}
       {!isPrintingFullReport && currentView === 'OBSERVATION' && (
         <div className="space-y-8">
+          {/* Form View (Selection Mode removed as it's now on Dashboard) */}
+          <>
           <div className="bg-white shadow sm:rounded-lg overflow-hidden">
             <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -1223,30 +1375,16 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
               </p>
             </div>
             
-            {/* Observation Tabs */}
-            <div className="border-b border-gray-200 bg-white px-4">
-              <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <div className="text-sm font-medium text-gray-900">
+                    {activeObservation === 'FIRST' ? 'First Observation' : 'Second Observation'}
+                </div>
                 <button
-                  onClick={() => setActiveObservation('FIRST')}
-                  className={`${
-                    activeObservation === 'FIRST'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  onClick={() => setCurrentView('MENU')}
+                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  First Observation
+                  Back to Menu
                 </button>
-                <button
-                  onClick={() => setActiveObservation('SECOND')}
-                  className={`${
-                    activeObservation === 'SECOND'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                >
-                  Second Observation
-                </button>
-              </nav>
             </div>
             
             {/* Lesson Observation Details Form */}
@@ -1268,7 +1406,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         });
                       }}
                       disabled={isCompleted || isObservationSubmitted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1287,7 +1425,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         });
                       }}
                       disabled={isCompleted || isObservationSubmitted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1306,7 +1444,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         });
                       }}
                       disabled={isCompleted || isObservationSubmitted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1325,7 +1463,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         });
                       }}
                       disabled={isCompleted || isObservationSubmitted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1344,7 +1482,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         });
                       }}
                       disabled={isCompleted || isObservationSubmitted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1363,7 +1501,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         });
                       }}
                       disabled={isCompleted || isObservationSubmitted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
                 </div>
@@ -1389,7 +1527,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         });
                       }}
                       disabled={isCompleted || isObservationSubmitted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1408,7 +1546,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         });
                       }}
                       disabled={isCompleted || isObservationSubmitted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1427,7 +1565,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                         });
                       }}
                       disabled={isCompleted || isObservationSubmitted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
                 </div>
@@ -1435,15 +1573,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
             )}
 
             <div className="px-4 py-5 sm:p-6">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <table className="min-w-full divide-y divide-gray-200 relative">
+                  <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">Parameters</th>
-                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Unsatisfactory (1)</th>
-                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Satisfactory (2)</th>
-                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Above Average (3)</th>
-                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Excellent (4)</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2 bg-gray-50">Parameters</th>
+                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Unsatisfactory (1)</th>
+                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Satisfactory (2)</th>
+                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Above Average (3)</th>
+                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Excellent (4)</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -1562,17 +1700,31 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
             </div>
           </div>
 
-          <div className="mt-4 flex justify-end">
-            {!isObservationSubmitted && (
-              <button
-                onClick={() => handleSubmit('OBSERVATION_SUBMITTED')}
-                disabled={loading}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-              >
-                {loading ? 'Submitting...' : 'Submit Observations'}
-              </button>
-            )}
-          </div>
+              {/* Action Buttons for Observation Form */}
+              <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 border-t border-gray-200 mt-4">
+                <div className="flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => handleSubmit(existingAppraisal?.status || 'DRAFT')}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Draft
+                  </button>
+                  
+                  {formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.status !== 'COMPLETED' && (
+                    <button
+                      type="button"
+                      onClick={() => handleMarkObservationComplete(activeObservation === 'FIRST' ? 1 : 2)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      disabled={loading}
+                    >
+                      Mark as Completed
+                    </button>
+                  )}
+                </div>
+              </div>
+          </>
         </div>
       )}
 
@@ -1593,15 +1745,15 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
               </p>
             </div>
             <div className="px-4 py-5 sm:p-6">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <table className="min-w-full divide-y divide-gray-200 relative">
+                  <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">Parameters</th>
-                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Unsatisfactory (1)</th>
-                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Satisfactory (2)</th>
-                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Above Average (3)</th>
-                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Excellent (4)</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2 bg-gray-50">Parameters</th>
+                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Unsatisfactory (1)</th>
+                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Satisfactory (2)</th>
+                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Above Average (3)</th>
+                      <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Excellent (4)</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -1785,7 +1937,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 print:px-2 print:py-1">{termNum === 3 ? targetStats.marks : '-'}</td>
                             </tr>
                           )}
-                          {!isSeniorLeadership && (
+                          {showObservations && (
                             <>
                               <tr>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-300 print:px-2 print:py-1">
