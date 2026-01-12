@@ -8,7 +8,7 @@ import { createUser, deleteUser } from '@/app/actions/user-actions';
 import { getAssignments } from '@/app/actions/assignment-actions';
 import { seedLeadershipUsers } from '@/app/actions/seed-actions';
 import { approveDeletion, rejectDeletion, resetAppraisalStatus } from '@/app/actions/appraisal-actions';
-import { Trash2, UserPlus, Users, ClipboardList, AlertTriangle, Check, X, RefreshCw, FileText, Database, Eye } from 'lucide-react';
+import { Trash2, UserPlus, Users, ClipboardList, AlertTriangle, Check, X, RefreshCw, FileText, Database, Eye, Loader2 } from 'lucide-react';
 import AssignmentManager from '@/components/dashboard/AssignmentManager';
 import AppraiserContent from '@/components/dashboard/AppraiserContent';
 import DashboardLayout from './DashboardLayout';
@@ -33,6 +33,7 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
   const [deletionRequests, setDeletionRequests] = useState<any[]>([]);
   const [allAppraisals, setAllAppraisals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'users' | 'assignments' | 'requests' | 'appraisals' | 'reports' | 'my_appraisals'>('users');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -165,8 +166,13 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
     }
   };
 
-  const handleCreateUser = async (formData: FormData) => {
+  const handleCreateUser = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
     setMessage(null);
+    setActionLoading('CREATE_USER');
+    
     const result = await createUser(null, formData);
     
     if (result.error) {
@@ -176,11 +182,13 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
       setIsModalOpen(false);
       await fetchData();
     }
+    setActionLoading(null);
   };
 
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
     
+    setActionLoading(`DELETE_USER_${userId}`);
     const result = await deleteUser(userId);
     if (result.success) {
       setUsers(users.filter(u => u.id !== userId));
@@ -188,11 +196,13 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
     } else {
       setMessage({ type: 'error', text: result.error || 'Failed to delete user' });
     }
+    setActionLoading(null);
   };
 
   const handleApproveDeletion = async (appraisalId: string) => {
     if (!confirm('Are you sure you want to approve this deletion? This action cannot be undone.')) return;
     
+    setActionLoading(`APPROVE_DELETE_${appraisalId}`);
     const result = await approveDeletion(appraisalId);
     if (result.success) {
       setMessage({ type: 'success', text: 'Appraisal deleted successfully' });
@@ -200,11 +210,13 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
     } else {
       setMessage({ type: 'error', text: result.error || 'Failed to delete appraisal' });
     }
+    setActionLoading(null);
   };
 
   const handleRejectDeletion = async (appraisalId: string) => {
     if (!confirm('Are you sure you want to reject this deletion request?')) return;
     
+    setActionLoading(`REJECT_DELETE_${appraisalId}`);
     const result = await rejectDeletion(appraisalId);
     if (result.success) {
       setMessage({ type: 'success', text: 'Deletion request rejected' });
@@ -212,11 +224,13 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
     } else {
       setMessage({ type: 'error', text: result.error || 'Failed to reject request' });
     }
+    setActionLoading(null);
   };
 
   const handleResetStatus = async (appraisalId: string, newStatus: string) => {
     if (!confirm(`Are you sure you want to change the status to ${newStatus}?`)) return;
     
+    setActionLoading(`RESET_STATUS_${appraisalId}`);
     const result = await resetAppraisalStatus(appraisalId, newStatus);
     if (result.success) {
       setMessage({ type: 'success', text: `Appraisal status updated to ${newStatus}` });
@@ -224,6 +238,7 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
     } else {
       setMessage({ type: 'error', text: result.error || 'Failed to update status' });
     }
+    setActionLoading(null);
   };
 
   if (loading) {
@@ -256,6 +271,7 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
                   <button
                     onClick={async () => {
                       if (!confirm('This will create sample leadership users. Continue?')) return;
+                      setActionLoading('SEED_DATA');
                       setMessage({ type: 'success', text: 'Seeding data... please wait.' });
                       const result = await seedLeadershipUsers();
                       if (result.success) {
@@ -264,11 +280,13 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
                       } else {
                         setMessage({ type: 'error', text: 'Failed to seed data.' });
                       }
+                      setActionLoading(null);
                     }}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    disabled={actionLoading === 'SEED_DATA'}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Database className="h-5 w-5 mr-2 text-gray-500" />
-                    Seed Sample Data
+                    {actionLoading === 'SEED_DATA' ? <Loader2 className="h-5 w-5 mr-2 animate-spin text-gray-500" /> : <Database className="h-5 w-5 mr-2 text-gray-500" />}
+                    {actionLoading === 'SEED_DATA' ? 'Seeding...' : 'Seed Sample Data'}
                   </button>
                   <button
                     onClick={() => setIsModalOpen(true)}
@@ -338,10 +356,15 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
                                 {user.role !== 'DIRECTOR' && (
                                   <button
                                     onClick={() => handleDeleteUser(user.id)}
-                                    className="text-red-600 hover:text-red-900"
+                                    disabled={actionLoading === `DELETE_USER_${user.id}`}
+                                    className="text-red-600 hover:text-red-900 flex items-center justify-end ml-auto"
                                     title="Delete User"
                                   >
-                                    <Trash2 className="h-5 w-5" />
+                                    {actionLoading === `DELETE_USER_${user.id}` ? (
+                                      <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-5 w-5" />
+                                    )}
                                   </button>
                                 )}
                               </td>
@@ -422,17 +445,19 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button
                                   onClick={() => handleApproveDeletion(request.id)}
-                                  className="text-green-600 hover:text-green-900 mr-4"
+                                  disabled={!!actionLoading}
+                                  className="text-green-600 hover:text-green-900 mr-4 inline-flex items-center"
                                   title="Approve Deletion"
                                 >
-                                  <Check className="h-5 w-5" />
+                                  {actionLoading === `APPROVE_DELETE_${request.id}` ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                                 </button>
                                 <button
                                   onClick={() => handleRejectDeletion(request.id)}
-                                  className="text-red-600 hover:text-red-900"
+                                  disabled={!!actionLoading}
+                                  className="text-red-600 hover:text-red-900 inline-flex items-center"
                                   title="Reject Request"
                                 >
-                                  <X className="h-5 w-5" />
+                                  {actionLoading === `REJECT_DELETE_${request.id}` ? <Loader2 className="h-5 w-5 animate-spin" /> : <X className="h-5 w-5" />}
                                 </button>
                               </td>
                             </tr>
@@ -545,10 +570,16 @@ export default function DirectorDashboard({ currentUser }: DirectorDashboardProp
                                 {appraisal.status !== 'DRAFT' && (
                                   <button
                                     onClick={() => handleResetStatus(appraisal.id, 'DRAFT')}
+                                    disabled={actionLoading === `RESET_STATUS_${appraisal.id}`}
                                     className="text-orange-600 hover:text-orange-900 flex items-center"
                                     title="Reset to Draft"
                                   >
-                                    <RefreshCw className="h-4 w-4 mr-1" /> Reset
+                                    {actionLoading === `RESET_STATUS_${appraisal.id}` ? (
+                                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                    ) : (
+                                      <RefreshCw className="h-4 w-4 mr-1" />
+                                    )}
+                                     Reset
                                   </button>
                                 )}
                               </div>

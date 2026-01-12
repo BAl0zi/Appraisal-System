@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { UserRole } from '@/constants/roles';
 import { assignAppraiser, removeAssignment } from '@/app/actions/assignment-actions';
-import { UserX } from 'lucide-react';
+import { UserX, Loader2 } from 'lucide-react';
 
 type User = {
   id: string;
@@ -140,10 +140,10 @@ export default function AssignmentManager({ users, assignments, onUpdate }: Assi
                     <button
                       onClick={() => handleRemove(user.id, role)}
                       disabled={isUpdating}
-                      className="text-red-600 hover:text-red-900 p-2"
+                      className="text-red-600 hover:text-red-900 p-2 ml-2"
                       title="Remove Assignment"
                     >
-                      <UserX className="h-5 w-5" />
+                      {isUpdating ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserX className="h-5 w-5" />}
                     </button>
                   )}
                 </div>

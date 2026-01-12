@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { saveAppraisal } from '@/app/actions/appraisal-actions';
-import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, Printer, Download, CheckCircle, ClipboardList } from 'lucide-react';
+import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, Printer, Download, CheckCircle, ClipboardList, Loader2 } from 'lucide-react';
 import SignatureInput from '../SignatureInput';
 import { getRoleCategory, UserRole } from '@/constants/roles';
 import { LESSON_OBSERVATION_PARAMETERS, WORK_OBSERVATION_PARAMETERS, PROFESSIONAL_DOCUMENTS } from '@/constants/observation-criteria';
@@ -1329,19 +1329,21 @@ showObservations
             <button
               type="button"
               onClick={() => handleSubmit(existingAppraisal?.status || 'DRAFT')}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={loading}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              <Save className="h-4 w-4 mr-2" />
-              Save Draft
+              {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              {loading ? 'Saving...' : 'Save Draft'}
             </button>
             
             {!isTargetsSet && (
               <button
                 type="button"
                 onClick={() => handleSubmit('TARGETS_SET')}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading || isCompleted}
               >
+                {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 {loading ? 'Saving...' : 'Set Targets (Phase 1)'}
               </button>
             )}
@@ -1350,9 +1352,10 @@ showObservations
               <button
                 type="button"
                 onClick={() => handleSubmit('TARGETS_SUBMITTED')}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading || isCompleted}
               >
+                {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 {loading ? 'Submitting...' : 'Complete Targets (Phase 2)'}
               </button>
             )}
@@ -1706,19 +1709,21 @@ showObservations
                   <button
                     type="button"
                     onClick={() => handleSubmit(existingAppraisal?.status || 'DRAFT')}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    disabled={loading}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Draft
+                    {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    {loading ? 'Saving...' : 'Save Draft'}
                   </button>
                   
                   {formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.status !== 'COMPLETED' && (
                     <button
                       type="button"
                       onClick={() => handleMarkObservationComplete(activeObservation === 'FIRST' ? 1 : 2)}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={loading}
                     >
+                      {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                       Mark as Completed
                     </button>
                   )}
@@ -1889,8 +1894,9 @@ showObservations
               <button
                 onClick={() => handleSubmit('EVALUATION_SUBMITTED')}
                 disabled={loading}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
+                {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 {loading ? 'Submitting...' : 'Submit Evaluation'}
               </button>
             )}
@@ -2136,8 +2142,9 @@ showObservations
                 <button
                   onClick={() => handleSubmit('COMPLETED')}
                   disabled={loading}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                  {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                   {loading ? 'Submitting...' : 'Submit Final Appraisal'}
                 </button>
               )}
