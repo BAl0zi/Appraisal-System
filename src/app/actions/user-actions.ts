@@ -52,7 +52,8 @@ export async function createUser(prevState: any, formData: FormData) {
         role,
         full_name: fullName,
         job_category: jobCategory,
-        additional_roles: additionalRoles
+        additional_roles: additionalRoles,
+        is_password_changed: false
       })
 
     if (dbError) {
@@ -82,3 +83,53 @@ export async function deleteUser(userId: string) {
     return { error: error.message }
   }
 }
+
+export async function resetUserPassword(userId: string, newPassword: string) {
+  try {
+    // 1. Update password in Supabase Auth
+    const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      password: newPassword
+    })
+
+    if (authError) {
+      throw new Error(`Auth Error: ${authError.message}`)
+    }
+
+    // 2. Reset the is_password_changed flag so they are forced to change it again
+    const { error: dbError } = await supabaseAdmin
+      .from('users')
+      .update({ is_password_changed: false })
+      .eq('id', userId)
+
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (error: any) {
+    return { error: error.message }
+  }
+}
+
+export async function updateUser(userId: string, formData: FormData) {
+    const role = formData.get('role') as UserRole
+    const jobCategory = formData.get('jobCategory') as string
+  
+    if (!role || !jobCategory) {
+      return { error: 'Role and Job Category are required' }
+    }
+  
+    try {
+      const { error } = await supabaseAdmin
+        .from('users')
+        .update({
+          role,
+          job_category: jobCategory
+        })
+        .eq('id', userId)
+  
+      if (error) throw new Error(error.message)
+  
+      revalidatePath('/dashboard')
+      return { success: true }
+    } catch (error: any) {
+      return { error: error.message }
+    }
+  }

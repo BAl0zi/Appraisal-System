@@ -1,14 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import DirectorDashboard from '@/components/dashboard/DirectorDashboard';
 import AppraiserDashboard from '@/components/dashboard/AppraiserDashboard';
 import ChangePasswordForm from '@/components/ChangePasswordForm';
 
-export default function Dashboard() {
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab');
+
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
@@ -62,9 +65,17 @@ export default function Dashboard() {
   }
 
   if (userData.role === 'DIRECTOR') {
-    return <DirectorDashboard currentUser={currentUser} />;
+    return <DirectorDashboard currentUser={currentUser} initialTab={initialTab || undefined} />;
   }
 
-  return <AppraiserDashboard currentUser={currentUser} />;
+  return <AppraiserDashboard currentUser={currentUser} initialTab={initialTab || undefined} />;
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>}>
+      <DashboardContent />
+    </Suspense>
+  );
 }
 

@@ -86,6 +86,7 @@ export default async function AppraisalPage({ params, searchParams }: PageProps)
     <DashboardLayout currentUser={currentUserData} role={currentUserData?.role}>
       <AppraisalForm 
         appraiserId={user.id}
+        appraiser={currentUserData}
         appraisee={appraisee}
         existingAppraisal={existingAppraisal}
         initialTerm={term as string}

@@ -21,6 +21,10 @@ interface Target {
 
 interface AppraisalFormProps {
   appraiserId: string;
+  appraiser?: {
+    full_name: string;
+    [key: string]: any;
+  };
   appraisee: {
     id: string;
     full_name: string;
@@ -42,7 +46,7 @@ interface AppraisalFormProps {
 
 type AppraisalView = 'MENU' | 'TARGETS' | 'OBSERVATION' | 'EVALUATION' | 'SCORESHEET';
 
-export default function AppraisalForm({ appraiserId, appraisee, existingAppraisal, initialTerm, initialYear, appraisalRole, initialView, hideBack }: AppraisalFormProps) {
+export default function AppraisalForm({ appraiserId, appraiser, appraisee, existingAppraisal, initialTerm, initialYear, appraisalRole, initialView, hideBack }: AppraisalFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isPrintingFullReport, setIsPrintingFullReport] = useState(false);
@@ -377,6 +381,24 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
         return;
     }
 
+    if (!currentObs?.time) {
+        setMessage({ 
+            type: 'error', 
+            text: `Please enter the time for the ${obsNum === 1 ? 'First' : 'Second'} Observation.` 
+        });
+        setLoading(false);
+        return;
+    }
+
+    if (!isTeachingStaff && !currentObs?.workAppraised) {
+         setMessage({ 
+            type: 'error', 
+            text: `Please enter 'Work Appraised' for the ${obsNum === 1 ? 'First' : 'Second'} Observation.` 
+        });
+        setLoading(false);
+        return;
+    }
+
     // Update status in local state
     const updatedFormData = {
         ...formData,
@@ -473,7 +495,7 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
     }
 
     // Validation: Check Observation Parameters (Required for Saving in Observation View or Completing)
-    if (status === 'OBSERVATION_SUBMITTED' || status === 'COMPLETED') {
+    if ((status === 'OBSERVATION_SUBMITTED' || status === 'COMPLETED') && showObservations) {
       const params = isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
       
       // Validate Observation 1 (Mandatory)
@@ -487,6 +509,24 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
         });
         setLoading(false);
         return;
+      }
+
+      if (!formData.observation1?.date || !formData.observation1?.time) {
+         setMessage({ 
+            type: 'error', 
+            text: `Please ensure Date and Time are filled First Observation.` 
+          });
+          setLoading(false);
+          return;
+      }
+
+      if (!isTeachingStaff && !formData.observation1?.workAppraised) {
+        setMessage({ 
+            type: 'error', 
+            text: `Please enter 'Work Appraised' for First Observation.` 
+          });
+          setLoading(false);
+          return;
       }
 
       // Validate Observation 2 (Optional, but if started, must be complete)
@@ -503,6 +543,24 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
             setLoading(false);
             return;
           }
+
+          if (!formData.observation2?.date || !formData.observation2?.time) {
+            setMessage({ 
+               type: 'error', 
+               text: `Please ensure Date and Time are filled Second Observation.` 
+             });
+             setLoading(false);
+             return;
+         }
+   
+         if (!isTeachingStaff && !formData.observation2?.workAppraised) {
+           setMessage({ 
+               type: 'error', 
+               text: `Please enter 'Work Appraised' for Second Observation.` 
+             });
+             setLoading(false);
+             return;
+         }
       }
     }
 
@@ -819,9 +877,9 @@ export default function AppraisalForm({ appraiserId, appraisee, existingAppraisa
               </table>
             </div>
           )}
-showObservations
+
           {/* Observation Section */}
-          {!isSeniorLeadership && ['observation1', 'observation2'].map((obsKey, obsIndex) => {
+          {showObservations && ['observation1', 'observation2'].map((obsKey, obsIndex) => {
              const obsData = formData[obsKey];
              // Only show second observation if it has data (check date or ratings)
              const hasData = obsData && (obsData.date || Object.keys(obsData.ratings || {}).length > 0);
@@ -841,7 +899,7 @@ showObservations
                   </div>
                   
                   <div><span className="font-bold">Appraisee:</span> {appraisee.full_name}</div>
-                  <div><span className="font-bold">Appraiser:</span> {existingAppraisal?.appraiser_name || '_________________'}</div>
+                  <div><span className="font-bold">Appraiser:</span> {existingAppraisal?.appraiser_name || appraiser?.full_name || '_________________'}</div>
                   
                   <div><span className="font-bold">Date:</span> {obsData?.date || '_________________'}</div>
                   <div><span className="font-bold">Time:</span> {obsData?.time || '_________________'}</div>

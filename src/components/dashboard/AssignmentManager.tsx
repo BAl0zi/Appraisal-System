@@ -89,69 +89,100 @@ export default function AssignmentManager({ users, assignments, onUpdate }: Assi
   });
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg mt-8">
-      <div className="px-4 py-5 sm:px-6">
-        <h3 className="text-lg leading-6 font-medium text-gray-900">Appraisal Assignments</h3>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500">Assign an appraiser to each staff member role.</p>
-      </div>
-      <div className="border-t border-gray-200">
-        <ul className="divide-y divide-gray-200">
-          {assignableItems.map(({ user, role, key }) => {
-            // Check for assignment by specific role, fallback to 'PRIMARY' if role matches primary role (legacy support)
-            const currentAppraiserId = assignments[user.id]?.[role] || (role === user.role ? assignments[user.id]?.['PRIMARY'] : undefined);
-            const isUpdating = loading === key;
-            
-            const allowedAppraiserRoles = APPRAISAL_HIERARCHY[role as UserRole] || [];
-            const eligibleAppraisers = potentialAppraisers.filter(a => 
-              allowedAppraiserRoles.includes(a.role) && a.id !== user.id
-            );
+    <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+            <div>
+                <h2 className="text-3xl font-bold text-gray-900">Appraisal Assignments</h2>
+                <p className="text-gray-500 mt-1">Assign appropriate appraisers to staff members based on their hierarchy.</p>
+            </div>
+            <div className="bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex items-center">
+                <span className="text-sm font-bold text-gray-500 mr-2">Total Roles:</span>
+                <span className="text-xl font-bold text-gray-900">{assignableItems.length}</span>
+            </div>
+        </div>
 
-            return (
-              <li key={key} className="px-4 py-4 sm:px-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-[#2D2B55] truncate">{user.full_name}</p>
-                  <p className="text-xs text-gray-500 truncate">
-                    <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{role}</span>
-                  </p>
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-8 py-6 border-b border-gray-50 bg-[#FDFBF7]/50">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Staff Role</div>
+                     <div className="text-xs font-bold text-gray-400 uppercase tracking-wider hidden md:block">Assigned Appraiser</div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center">
-                    <span className="mr-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Appraised by:</span>
-                    <select
-                      className="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-[#2D2B55] focus:border-[#2D2B55] rounded-md shadow-sm text-gray-900 bg-white"
-                      value={currentAppraiserId || ''}
-                      onChange={(e) => handleAssign(user.id, e.target.value, role)}
-                      disabled={isUpdating}
-                      title={`Assign appraiser for ${user.full_name} (${role})`}
-                    >
-                      <option value="">Select Appraiser...</option>
-                      {eligibleAppraisers.length > 0 ? (
-                        eligibleAppraisers.map(appraiser => (
-                          <option key={appraiser.id} value={appraiser.id}>
-                            {appraiser.full_name} ({appraiser.role})
-                          </option>
-                        ))
-                      ) : (
-                        <option disabled>No eligible appraisers found</option>
-                      )}
-                    </select>
-                  </div>
-                  {currentAppraiserId && (
-                    <button
-                      onClick={() => handleRemove(user.id, role)}
-                      disabled={isUpdating}
-                      className="text-red-600 hover:text-red-900 p-2 ml-2"
-                      title="Remove Assignment"
-                    >
-                      {isUpdating ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserX className="h-5 w-5" />}
-                    </button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+            </div>
+            <ul className="divide-y divide-gray-50">
+            {assignableItems.map(({ user, role, key }) => {
+                // Check for assignment by specific role, fallback to 'PRIMARY' if role matches primary role (legacy support)
+                const currentAppraiserId = assignments[user.id]?.[role] || (role === user.role ? assignments[user.id]?.['PRIMARY'] : undefined);
+                const isUpdating = loading === key;
+                
+                const allowedAppraiserRoles = APPRAISAL_HIERARCHY[role as UserRole] || [];
+                const eligibleAppraisers = potentialAppraisers.filter(a => 
+                allowedAppraiserRoles.includes(a.role) && a.id !== user.id
+                );
+
+                return (
+                <li key={key} className="px-8 py-5 hover:bg-gray-50/50 transition-all duration-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                        {/* Appraisee Info */}
+                        <div className="flex items-center min-w-0">
+                            <div className="h-10 w-10 shrink-0 rounded-full bg-linear-to-tr from-indigo-50 to-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm mr-4">
+                                {user.full_name.charAt(0)}
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-bold text-gray-900 truncate">{user.full_name}</p>
+                                <span className={`mt-1 inline-flex text-xs font-bold px-2 py-0.5 rounded-lg 
+                                    ${role === 'TEACHERS' ? 'bg-orange-100 text-orange-800' : 
+                                      role.includes('HEAD') ? 'bg-purple-100 text-purple-800' : 
+                                      'bg-blue-50 text-blue-700'}`}>
+                                    {role}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Assignment Controls */}
+                        <div className="flex items-center space-x-3">
+                            <div className="relative flex-1">
+                                <select
+                                    className="block w-full pl-4 pr-10 py-2.5 text-sm border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-gray-700 bg-gray-50 disabled:opacity-50 transition-all"
+                                    value={currentAppraiserId || ''}
+                                    onChange={(e) => handleAssign(user.id, e.target.value, role)}
+                                    disabled={isUpdating}
+                                    title={`Assign appraiser for ${user.full_name} (${role})`}
+                                >
+                                    <option value="" className="text-gray-400">Select Appraiser...</option>
+                                    {eligibleAppraisers.length > 0 ? (
+                                        eligibleAppraisers.map(appraiser => (
+                                        <option key={appraiser.id} value={appraiser.id}>
+                                            {appraiser.full_name} — {appraiser.role}
+                                        </option>
+                                        ))
+                                    ) : (
+                                        <option disabled>No eligible appraisers found</option>
+                                    )}
+                                </select>
+                                {isUpdating && (
+                                    <div className="absolute right-3 top-2.5">
+                                        <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {currentAppraiserId && (
+                                <button
+                                onClick={() => handleRemove(user.id, role)}
+                                disabled={isUpdating}
+                                className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100"
+                                title="Remove Assignment"
+                                >
+                                   <UserX className="h-5 w-5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </li>
+                );
+            })}
+            </ul>
+        </div>
     </div>
   );
 }
