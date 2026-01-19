@@ -38,6 +38,47 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children, currentUser, role, customNavigation }: DashboardLayoutProps) {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  // Load notifications (for Director only)
+  useEffect(() => {
+    if (role !== 'DIRECTOR') return;
+
+    let mounted = true;
+
+    const loadNotifications = async () => {
+      try {
+        // Appraisals that have started (not DRAFT) and completed
+        const { data } = await supabase
+          .from('appraisals')
+          .select(`id, appraisee_id, status, updated_at, appraiser:users!appraiser_id(full_name), appraisee:users!appraisee_id(full_name)`)
+          .order('updated_at', { ascending: false })
+          .limit(20);
+
+        if (!mounted || !data) return;
+
+        const notifs = data.map((a: any) => ({
+          id: a.id,
+          appraisee_id: a.appraisee_id,
+          status: a.status,
+          updated_at: a.updated_at,
+          message: a.status === 'COMPLETED' || a.status === 'SIGNED'
+            ? `${a.appraisee?.full_name || 'Someone'} appraisal completed`
+            : `${a.appraisee?.full_name || 'Someone'} appraisal started`
+        }));
+
+        setNotifications(notifs);
+      } catch (err) {
+        console.error('Failed loading notifications', err);
+      }
+    };
+
+    loadNotifications();
+
+    return () => { mounted = false; };
+  }, [role]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -144,15 +185,50 @@ export default function DashboardLayout({ children, currentUser, role, customNav
                 <input 
                     type="text" 
                     placeholder="Search..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        // navigate to dashboard with search term
+                        router.push(`/dashboard?term=${encodeURIComponent(searchTerm)}`);
+                      }
+                    }}
                     className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-gray-700 placeholder-gray-400 indent-0"
                 />
             </div>
 
             <div className="flex items-center space-x-4 ml-4">
-                <button className="p-2 rounded-full bg-white text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100 relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
-                </button>
+                <div className="relative">
+                  <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="p-2 rounded-full bg-white text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100 relative">
+                      <Bell className="h-5 w-5" />
+                      {notifications.length > 0 && (
+                        <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
+                      )}
+                  </button>
+
+                  {isNotifOpen && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-100 p-3 z-50">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Notifications</h4>
+                      {notifications.length === 0 ? (
+                        <p className="text-xs text-gray-500">No new notifications</p>
+                      ) : (
+                        <ul className="space-y-2 max-h-60 overflow-y-auto">
+                          {notifications.map((n) => (
+                            <li key={n.id}>
+                              <button onClick={() => {
+                                setIsNotifOpen(false);
+                                router.push(`/dashboard/appraisal/${n.appraisee_id}?appraisalId=${n.id}`);
+                              }} className="text-left w-full text-sm hover:bg-gray-50 p-2 rounded">
+                                <p className="font-medium text-gray-800">{n.message}</p>
+                                <p className="text-xs text-gray-500">{new Date(n.updated_at).toLocaleString()}</p>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <div className="h-10 w-10 rounded-full bg-gray-200 border-2 border-white shadow-sm overflow-hidden">
                      {/* Placeholder Avatar */}
                      <div className="h-full w-full bg-slate-300 flex items-center justify-center text-slate-500 font-bold">

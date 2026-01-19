@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { ROLES, UserRole } from '@/constants/roles';
 import { JOB_CATEGORIES, JOB_CATEGORY_LABELS } from '@/constants/job-categories';
@@ -37,6 +38,8 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'assignments' | 'requests' | 'appraisals' | 'reports' | 'my_appraisals' | 'settings'>((initialTab as any) || 'overview');
+  const searchParams = useSearchParams();
+  const searchTermParam = searchParams?.get('term');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [resetPasswordResult, setResetPasswordResult] = useState<{ name: string; password: string } | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -49,11 +52,14 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
 
   useEffect(() => {
     const fetchData = async () => {
+      const term = searchTermParam || null;
       // Fetch all users
-      const { data: usersData } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let usersQuery = supabase.from('users').select('*').order('created_at', { ascending: false });
+      if (term) {
+        // basic ilike search on name or email
+        usersQuery = usersQuery.or(`full_name.ilike.%${term}%,email.ilike.%${term}%`);
+      }
+      const { data: usersData } = await usersQuery;
       
       if (usersData) {
         const mappedUsers = usersData.map((u: any) => ({
@@ -103,16 +109,25 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
           appraisee:users!appraisee_id(full_name)
         `)
         .order('updated_at', { ascending: false });
+      // If term provided, filter client-side by appraisee/appraiser name or appraisal id
+      const filteredAppraisals = (appraisalsData || []).filter((a: any) => {
+        if (!term) return true;
+        const t = term.toLowerCase();
+        const appraisee = a.appraisee?.full_name?.toLowerCase() || '';
+        const appraiser = a.appraiser?.full_name?.toLowerCase() || '';
+        const id = (a.id || '').toLowerCase();
+        return appraisee.includes(t) || appraiser.includes(t) || id.includes(t);
+      });
       
-      if (appraisalsData) {
-        setAllAppraisals(appraisalsData);
+      if (filteredAppraisals) {
+        setAllAppraisals(filteredAppraisals);
       }
 
       setLoading(false);
     };
 
     fetchData();
-  }, []);
+  }, [searchTermParam]);
 
   const fetchData = async () => {
     // Re-fetch for updates
