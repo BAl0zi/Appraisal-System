@@ -227,12 +227,7 @@ export default function DashboardLayout({ children, currentUser, role, customNav
                     </div>
                   )}
                 </div>
-                <div className="h-10 w-10 rounded-full bg-gray-200 border-2 border-white shadow-sm overflow-hidden">
-                     {/* Placeholder Avatar */}
-                     <div className="h-full w-full bg-slate-300 flex items-center justify-center text-slate-500 font-bold">
-                        {currentUser.full_name?.[0]}
-                     </div>
-                </div>
+                 {/* avatar removed as requested */}
             </div>
         </header>
 
