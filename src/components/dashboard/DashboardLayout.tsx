@@ -11,8 +11,7 @@ import {
   LogOut, 
   Menu, 
   X, 
-  Bell, 
-  Search,
+  Bell,
   ChevronDown,
   ClipboardList,
   AlertTriangle,
@@ -181,7 +180,6 @@ export default function DashboardLayout({ children, currentUser, role, customNav
             </button>
             
             <div className="flex-1 max-w-2xl flex items-center bg-white rounded-full px-4 py-2 shadow-sm border border-gray-100 ml-4 lg:ml-0">
-                <Search className="h-5 w-5 text-gray-400 mr-3" />
                 <input 
                     type="text" 
                     placeholder="Search..." 
