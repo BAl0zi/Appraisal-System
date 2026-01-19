@@ -20,23 +20,32 @@ export default function Home() {
         <h1 className="text-4xl font-extrabold text-white sm:text-5xl sm:tracking-tight lg:text-6xl mb-2 drop-shadow-lg">
           Urafiki Carovana
         </h1>
-        <p className="text-2xl font-medium text-blue-200 mb-8 tracking-wide">
-          Appraisal System
+        <p className="text-2xl font-medium text-blue-200 mb-6 tracking-wide">
+          Simple, secure staff appraisals that help teams grow.
         </p>
+
+        <div className="max-w-2xl mx-auto text-blue-100 text-left mb-8">
+          <p className="mb-4">
+            Urafiki Carovana makes performance reviews easy — no jargon, no paperwork. Run fair, consistent appraisals, collect digital signatures, and generate clear reports in minutes. Built for busy managers who want real results without the admin headache.
+          </p>
+          <p>
+            Try it to streamline feedback, recognise top performers, and keep development on track — all from one secure, user-friendly portal.
+          </p>
+        </div>
         
         <div className="max-w-md mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-10">
           <ul className="text-left space-y-3 text-blue-100">
             <li className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-3 text-green-400" />
-              <span>Streamlined Performance Reviews</span>
+              <span>Run reviews quickly — set goals, score fairly, and share feedback.</span>
             </li>
             <li className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-3 text-green-400" />
-              <span>Digital Signature Integration</span>
+              <span>Sign electronically — secure, legal-ready digital signatures.</span>
             </li>
             <li className="flex items-center">
               <CheckCircle className="h-5 w-5 mr-3 text-green-400" />
-              <span>Comprehensive Reporting</span>
+              <span>Export clear reports to track progress and celebrate wins.</span>
             </li>
           </ul>
         </div>
@@ -46,7 +55,7 @@ export default function Home() {
             href="/login"
             className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-[#2D2B55] bg-white hover:bg-blue-50 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
-            Log in to Portal
+            Access the Portal
           </Link>
         </div>
         
