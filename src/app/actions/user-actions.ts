@@ -85,7 +85,7 @@ export async function deleteUser(userId: string) {
     if (delAppError) throw new Error(`Failed to delete related appraisals: ${delAppError.message}`)
 
     const { error: delAssignError } = await supabaseAdmin
-      .from('assignments')
+      .from('appraiser_assignments')
       .delete()
       .or(`appraiser_id.eq.${userId},appraisee_id.eq.${userId}`)
 
