@@ -74,9 +74,35 @@ export async function createUser(prevState: any, formData: FormData) {
 
 export async function deleteUser(userId: string) {
   try {
+    // 1. Remove or reassign any dependent rows in other tables to avoid foreign key constraint errors.
+    // Adjust table names/columns below to match your schema as needed.
+    // Example: delete appraisals, assignments where user is referenced.
+    const { error: delAppError } = await supabaseAdmin
+      .from('appraisals')
+      .delete()
+      .eq('appraisee_id', userId)
+
+    if (delAppError) throw new Error(`Failed to delete related appraisals: ${delAppError.message}`)
+
+    const { error: delAssignError } = await supabaseAdmin
+      .from('assignments')
+      .delete()
+      .or(`appraiser_id.eq.${userId},appraisee_id.eq.${userId}`)
+
+    if (delAssignError) throw new Error(`Failed to delete related assignments: ${delAssignError.message}`)
+
+    // If you keep a separate `users` table, remove the record there as well.
+    const { error: delUserRowError } = await supabaseAdmin
+      .from('users')
+      .delete()
+      .eq('id', userId)
+
+    if (delUserRowError) throw new Error(`Failed to delete user row: ${delUserRowError.message}`)
+
+    // 2. Delete from Supabase Auth last (service role client)
     const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
     if (error) throw new Error(error.message)
-    
+
     revalidatePath('/dashboard')
     return { success: true }
   } catch (error: any) {

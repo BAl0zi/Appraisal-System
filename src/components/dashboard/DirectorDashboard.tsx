@@ -467,26 +467,6 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                 </div>
                 <div className="flex space-x-3">
                   <button
-                    onClick={async () => {
-                      if (!confirm('This will create sample leadership users. Continue?')) return;
-                      setActionLoading('SEED_DATA');
-                      setMessage({ type: 'success', text: 'Seeding data... please wait.' });
-                      const result = await seedLeadershipUsers();
-                      if (result.success) {
-                        setMessage({ type: 'success', text: 'Sample data seeded successfully!' });
-                        fetchData();
-                      } else {
-                        setMessage({ type: 'error', text: 'Failed to seed data.' });
-                      }
-                      setActionLoading(null);
-                    }}
-                    disabled={actionLoading === 'SEED_DATA'}
-                    className="inline-flex items-center px-5 py-2.5 border border-gray-200 text-sm font-bold rounded-xl shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-all"
-                  >
-                    {actionLoading === 'SEED_DATA' ? <Loader2 className="h-5 w-5 mr-2 animate-spin text-gray-500" /> : <Database className="h-5 w-5 mr-2 text-gray-500" />}
-                    {actionLoading === 'SEED_DATA' ? 'Seeding...' : 'Seed Data'}
-                  </button>
-                  <button
                     onClick={openUserModal}
                     className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-xl shadow-sm text-gray-900 bg-[#FAE29F] hover:bg-[#FBE8B5] focus:outline-none transition-all"
                   >
