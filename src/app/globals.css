@@ -24,3 +24,47 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Print helpers */
+@media print {
+  .no-print { display: none !important; }
+  /* Ensure page uses full width when printing */
+  .print\:p-0 { padding: 0 !important; }
+  /* Use full printable width */
+  .max-w-5xl { width: 100% !important; max-width: 100% !important; }
+
+  /* Make overflowing content visible in print */
+  * { overflow: visible !important; }
+
+  /* Additional Tailwind-print helper fallbacks */
+  .print\:overflow-visible { overflow: visible !important; }
+  .print\:hidden { display: none !important; }
+
+  /* Remove viewport-height constraints that create large blank areas */
+  .h-screen { height: auto !important; }
+  .min-h-screen { min-height: 0 !important; }
+  .max-h-0 { max-height: none !important; }
+  .overflow-y-auto { overflow: visible !important; max-height: none !important; }
+  .fixed { position: static !important; }
+  .flex-1 { flex: 1 1 auto !important; }
+
+  /* Keep printable area visible and reset positioning for print */
+  .print-area { position: static !important; visibility: visible !important; display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+  .print-area * { visibility: visible !important; }
+  html, body, #__next { height: auto !important; margin: 0 !important; padding: 0 !important; }
+  /* Force light colors for printing to avoid dark-mode preview */
+  body { background: #ffffff !important; color: #111111 !important; -webkit-print-color-adjust: exact !important; }
+
+  /* Page break helpers */
+  .print\:page-break-after-always { page-break-after: always; break-after: page; }
+  .page-break { page-break-after: always; break-after: page; }
+  .avoid-break { page-break-inside: avoid; break-inside: avoid; }
+
+  /* Tables: keep rows together and repeat headers */
+  table { page-break-inside: avoid; break-inside: avoid; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+
+  /* Set a sensible page size and margins for PDF print */
+  @page { size: A4; margin: 12mm; }
+}

@@ -12,11 +12,11 @@ interface PageProps {
 export default async function AppraisalPage({ params, searchParams }: PageProps) {
   const { appraiseeId } = await params;
   const { term, year, appraisalId, role, view, hideBack } = await searchParams;
-  
+
   // Get current user session
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     redirect('/login');
   }
@@ -50,14 +50,14 @@ export default async function AppraisalPage({ params, searchParams }: PageProps)
       .single();
     existingAppraisal = data;
   } else if (term && year) {
-    // Try to find by term and year
+    // Try to find by term and year - Strict check for direct appraiser
     let query = supabaseAdmin
       .from('appraisals')
       .select('*')
       .eq('appraiser_id', user.id)
       .eq('appraisee_id', appraiseeId)
       .contains('appraisal_data', { term, year });
-    
+
     if (role) {
       query = query.eq('role', role);
     }
@@ -84,7 +84,7 @@ export default async function AppraisalPage({ params, searchParams }: PageProps)
 
   return (
     <DashboardLayout currentUser={currentUserData} role={currentUserData?.role}>
-      <AppraisalForm 
+      <AppraisalForm
         appraiserId={user.id}
         appraiser={currentUserData}
         appraisee={appraisee}
