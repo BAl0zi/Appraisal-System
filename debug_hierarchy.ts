@@ -42,7 +42,8 @@ async function checkPeterAppraisal() {
         console.log(`\nAppraisals found for Peter (${appraisals?.length}):`);
         appraisals?.forEach(a => {
             console.log(`- ID: ${a.id}`);
-            console.log(`  Appraiser: ${a.appraiser.full_name} (${a.appraiser.role}) [${a.appraiser.id}]`);
+            const appraiser = Array.isArray(a.appraiser) ? a.appraiser[0] : a.appraiser;
+            console.log(`  Appraiser: ${appraiser?.full_name ?? 'Unknown'} (${appraiser?.role ?? 'N/A'}) [${appraiser?.id ?? 'N/A'}]`);
             console.log(`  Status: ${a.status}`);
             console.log(`  Updated: ${a.updated_at}`);
         });
