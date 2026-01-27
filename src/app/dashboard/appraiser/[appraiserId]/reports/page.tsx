@@ -71,6 +71,15 @@ export default async function AppraiserReportsPage({ params, searchParams }: Pag
     );
   }
 
+  if (!appraiser) {
+    return (
+      <div className="max-w-5xl mx-auto py-8 px-4">
+        <h1 className="text-xl font-bold">Appraiser Reports</h1>
+        <p className="text-sm text-red-600">Appraiser not found.</p>
+      </div>
+    );
+  }
+
   // fetch appraisals by this appraiser
   let query = supabaseAdmin
     .from('appraisals')
