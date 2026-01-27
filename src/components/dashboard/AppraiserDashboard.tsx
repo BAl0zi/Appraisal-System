@@ -26,7 +26,10 @@ export default function AppraiserDashboard({ currentUser, initialTab }: Appraise
       {activeTab === 'team_performance' ? (
         <TeamPerformance currentUser={currentUser} />
       ) : (
-        <AppraiserContent currentUser={currentUser} currentTab={activeTab === 'team_performance' ? 'home' : activeTab as 'home' | 'appraisals' | 'settings'} />
+        (() => {
+          const tabForContent: 'home' | 'appraisals' | 'settings' = activeTab === 'team_performance' ? 'home' : (activeTab as 'home' | 'appraisals' | 'settings');
+          return <AppraiserContent currentUser={currentUser} currentTab={tabForContent} />;
+        })()
       )}
     </DashboardLayout>
   );
