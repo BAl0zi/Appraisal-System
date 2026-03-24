@@ -24,6 +24,7 @@ export const ROLES = [
   'TEACHERS',
   'LAB TECHNICIAN',
   'LIBRARIAN',
+  'COACH',
   'COOKS',
   'CLEANERS',
   'DRIVERS',
@@ -63,6 +64,7 @@ export const ROLE_HIERARCHY: Record<UserRole, RoleCategory> = {
   'SPECIAL NEEDS TEACHER': 'TEACHING',
   'LAB TECHNICIAN': 'TEACHING',
   'LIBRARIAN': 'TEACHING',
+  'COACH': 'TEACHING',
   'ACCOUNTANT': 'NON_TEACHING',
   'SECRETARY': 'NON_TEACHING',
   'ICT TECHNICIANS': 'NON_TEACHING',
@@ -90,6 +92,7 @@ export const getRoleCategory = (role: string): RoleCategory => {
   if (normalizedRole === 'CLASS TEACHER') return 'FIRSTLINE_LEADERSHIP';
   if (normalizedRole === 'LAB TECHNICIAN') return 'TEACHING';
   if (normalizedRole === 'SPECIAL NEEDS TEACHER') return 'TEACHING';
+  if (normalizedRole === 'COACH') return 'TEACHING';
 
   return 'NON_TEACHING';
 };
