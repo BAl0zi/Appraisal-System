@@ -376,7 +376,6 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
   const navigation = [
     { name: 'Dashboard', href: '/dashboard?tab=overview', icon: LayoutDashboard, current: activeTab === 'overview', onClick: () => setActiveTab('overview') },
     { name: 'User Management', href: '/dashboard?tab=users', icon: Users, current: activeTab === 'users', onClick: () => setActiveTab('users') },
-    { name: 'Bulk Upload', href: '/admin-setup/import-staff', icon: Database, current: false },
     { name: 'Appraisal Assignments', href: '/dashboard?tab=assignments', icon: ClipboardList, current: activeTab === 'assignments', onClick: () => setActiveTab('assignments') },
     { name: 'Deletion Requests', href: '/dashboard?tab=requests', icon: AlertTriangle, current: activeTab === 'requests', onClick: () => setActiveTab('requests') },
     { name: 'Appraisal Management', href: '/dashboard?tab=appraisals', icon: FileText, current: activeTab === 'appraisals', onClick: () => setActiveTab('appraisals') },
