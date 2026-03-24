@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { ROLES, UserRole } from '@/constants/roles';
 import { JOB_CATEGORIES, JOB_CATEGORY_LABELS } from '@/constants/job-categories';
 import { createUser, deleteUser, resetUserPassword, updateUser } from '@/app/actions/user-actions';
 import { getAssignments } from '@/app/actions/assignment-actions';
 import { approveDeletion, rejectDeletion, resetAppraisalStatus } from '@/app/actions/appraisal-actions';
-import { Trash2, UserPlus, Users, ClipboardList, AlertTriangle, Check, X, RefreshCw, FileText, Database, Eye, Loader2, Key, Edit, LayoutDashboard, Settings } from 'lucide-react';
+import { resetSystemForProduction } from '@/app/actions/production-cleanup';
+import { Trash2, UserPlus, Users, ClipboardList, AlertTriangle, Check, X, RefreshCw, FileText, Database, Eye, Loader2, Key, Edit, LayoutDashboard, Settings, TriangleAlert } from 'lucide-react';
 import AssignmentManager from '@/components/dashboard/AssignmentManager';
 import AppraiserContent from '@/components/dashboard/AppraiserContent';
 import DashboardLayout from './DashboardLayout';
@@ -43,6 +45,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [resetPasswordResult, setResetPasswordResult] = useState<{ name: string; password: string } | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showDangerZone, setShowDangerZone] = useState(false);
 
   // Password Change State
   const [newPassword, setNewPassword] = useState('');
@@ -338,6 +341,30 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
     setUpdatingPassword(false);
   };
 
+  const handleSystemReset = async () => {
+        const confirmText = prompt("WARNING: This will delete ALL users, assignments, and appraisals except Director accounts. Type 'DELETE' to confirm.");
+        if (confirmText !== 'DELETE') {
+            return;
+        }
+
+        setActionLoading('reset_system');
+        try {
+            const result = await resetSystemForProduction();
+            if (result.success) {
+                setMessage({ type: 'success', text: result.message || 'System reset successfully' });
+                // Refresh data
+                // Reload page to reflect total wipe
+                window.location.reload(); 
+            } else {
+                setMessage({ type: 'error', text: result.error || 'Reset failed' });
+            }
+        } catch (error: any) {
+             setMessage({ type: 'error', text: error.message });
+        } finally {
+            setActionLoading(null);
+        }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -349,6 +376,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
   const navigation = [
     { name: 'Dashboard', href: '/dashboard?tab=overview', icon: LayoutDashboard, current: activeTab === 'overview', onClick: () => setActiveTab('overview') },
     { name: 'User Management', href: '/dashboard?tab=users', icon: Users, current: activeTab === 'users', onClick: () => setActiveTab('users') },
+    { name: 'Bulk Upload', href: '/admin-setup/import-staff', icon: Database, current: false },
     { name: 'Appraisal Assignments', href: '/dashboard?tab=assignments', icon: ClipboardList, current: activeTab === 'assignments', onClick: () => setActiveTab('assignments') },
     { name: 'Deletion Requests', href: '/dashboard?tab=requests', icon: AlertTriangle, current: activeTab === 'requests', onClick: () => setActiveTab('requests') },
     { name: 'Appraisal Management', href: '/dashboard?tab=appraisals', icon: FileText, current: activeTab === 'appraisals', onClick: () => setActiveTab('appraisals') },
@@ -453,7 +481,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
 
                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 col-span-2">
                      <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-                     <div className="grid grid-cols-2 gap-4">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <button onClick={() => setActiveTab('users')} className="p-4 rounded-xl bg-gray-50 hover:bg-gray-100 text-left transition-colors">
                             <Users className="h-6 w-6 text-gray-700 mb-2" />
                             <span className="font-bold text-gray-900 block">Manage Staff</span>
@@ -464,6 +492,11 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                             <span className="font-bold text-gray-900 block">View Reports</span>
                             <span className="text-xs text-gray-500">Generate summaries</span>
                         </button>
+                    <Link href="/admin-setup/import-staff" className="p-4 rounded-xl bg-gray-50 hover:bg-gray-100 text-left transition-colors">
+                      <Database className="h-6 w-6 text-gray-700 mb-2" />
+                      <span className="font-bold text-gray-900 block">Bulk Upload</span>
+                      <span className="text-xs text-gray-500">Import staff from Excel</span>
+                    </Link>
                      </div>
                  </div>
             </div>
@@ -487,6 +520,13 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                     <UserPlus className="h-5 w-5 mr-2" />
                     Add User
                   </button>
+                  <Link
+                    href="/admin-setup/import-staff"
+                    className="inline-flex items-center px-5 py-2.5 border border-gray-600 text-sm font-bold rounded-xl shadow-sm text-white bg-gray-700 hover:bg-gray-600 transition-all"
+                  >
+                    <Database className="h-5 w-5 mr-2" />
+                    Bulk Import
+                  </Link>
                 </div>
               </div>
 
@@ -1039,6 +1079,54 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                             </div>
                         </form>
                     </div>
+                </div>
+
+                {/* Danger Zone */}
+                <div className="max-w-2xl bg-red-50 rounded-3xl shadow-sm border border-red-100 overflow-hidden">
+                    <button 
+                        onClick={() => setShowDangerZone(!showDangerZone)}
+                        className="w-full px-8 py-6 flex items-center justify-between text-left hover:bg-red-100/50 transition-colors"
+                    >
+                         <div className="flex items-center space-x-4">
+                            <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                                <TriangleAlert className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-red-900">Danger Zone</h3>
+                                <p className="text-sm text-red-700 font-medium">Irreversible system actions.</p>
+                            </div>
+                        </div>
+                        <div className="text-red-700 font-medium text-sm">
+                            {showDangerZone ? 'Hide' : 'Show'}
+                        </div>
+                    </button>
+                    
+                    {showDangerZone && (
+                        <div className="px-8 pb-8 pt-2">
+                             <div className="bg-white p-6 rounded-2xl border border-red-100 shadow-sm">
+                                <h4 className="font-bold text-gray-900 mb-3 text-lg">System Factory Reset</h4>
+                                <div className="text-gray-600 mb-6 leading-relaxed text-sm">
+                                    This action will <strong className="text-red-600">PERMANENTLY DELETE</strong> all:
+                                    <ul className="list-disc ml-5 mt-2 space-y-1 text-gray-500">
+                                        <li>Staff Accounts (Teachers, Cooks, Drivers, etc.)</li>
+                                        <li>All Appraisal Records</li>
+                                        <li>Role Assignments & Settings</li>
+                                    </ul>
+                                    <br/>
+                                    <span className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-md font-bold mt-2 border border-blue-100">
+                                        Note: Accounts with the 'DIRECTOR' role will be preserved.
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={handleSystemReset}
+                                    disabled={actionLoading === 'reset_system'}
+                                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-500/20 disabled:opacity-50 transition-all shadow-lg shadow-red-200"
+                                >
+                                    {actionLoading === 'reset_system' ? 'Resetting System...' : 'Reset System to Factory State'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
              </div>
           ) : null}
