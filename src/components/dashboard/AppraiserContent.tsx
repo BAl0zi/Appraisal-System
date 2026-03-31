@@ -21,6 +21,11 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
       setActiveTab(currentTab);
     }
   }, [currentTab]);
+
+  useEffect(() => {
+    setMessage(null);
+  }, [activeTab]);
+
   const [appraisees, setAppraisees] = useState<any[]>([]);
   const [appraisals, setAppraisals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

@@ -39,19 +39,28 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'assignments' | 'requests' | 'appraisals' | 'reports' | 'my_appraisals' | 'settings'>((initialTab as any) || 'overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'staff_list' | 'users' | 'assignments' | 'requests' | 'appraisals' | 'reports' | 'my_appraisals' | 'settings'>((initialTab as any) || 'overview');
   const searchParams = useSearchParams();
   const searchTermParam = searchParams?.get('term');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [resetPasswordResult, setResetPasswordResult] = useState<{ name: string; password: string } | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showDangerZone, setShowDangerZone] = useState(false);
+  const [staffSearchTerm, setStaffSearchTerm] = useState('');
+  const [staffCategoryFilter, setStaffCategoryFilter] = useState('ALL');
+  const [staffRoleFilter, setStaffRoleFilter] = useState('ALL');
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [isStaffPanelCollapsed, setIsStaffPanelCollapsed] = useState(false);
 
   // Password Change State
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
+  useEffect(() => {
+    setMessage(null);
+    setResetPasswordResult(null);
+  }, [activeTab]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -365,6 +374,35 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
         }
   };
 
+  const staffUsers = users;
+  const categoryCounts = JOB_CATEGORIES.reduce((acc, category) => {
+    acc[category] = staffUsers.filter(user => user.job_category === category).length;
+    return acc;
+  }, {} as Record<string, number>);
+  const uncategorizedStaffUsers = staffUsers.filter(user => !JOB_CATEGORIES.includes(user.job_category as any));
+  const uncategorizedStaffCount = uncategorizedStaffUsers.length;
+  const staffRoleOptions = Array.from(
+    new Set(
+      staffUsers.flatMap(user => user.roles && user.roles.length > 0 ? user.roles : [user.role])
+    )
+  ).sort();
+  const filteredStaffUsers = staffUsers.filter(user => {
+    const userRoles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
+    const normalizedSearch = staffSearchTerm.trim().toLowerCase();
+    const matchesSearch = !normalizedSearch || [
+      user.full_name,
+      user.email,
+      user.job_category,
+      JOB_CATEGORY_LABELS[user.job_category as keyof typeof JOB_CATEGORY_LABELS],
+      ...userRoles,
+    ].filter(Boolean).some(value => String(value).toLowerCase().includes(normalizedSearch));
+    const matchesCategory = staffCategoryFilter === 'ALL' || user.job_category === staffCategoryFilter;
+    const matchesRole = staffRoleFilter === 'ALL' || userRoles.includes(staffRoleFilter as UserRole);
+
+    return matchesSearch && matchesCategory && matchesRole;
+  });
+  const selectedStaff = staffUsers.find(user => user.id === selectedStaffId) || filteredStaffUsers[0] || null;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -375,6 +413,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard?tab=overview', icon: LayoutDashboard, current: activeTab === 'overview', onClick: () => setActiveTab('overview') },
+    { name: 'Staff List', href: '/dashboard?tab=staff_list', icon: Users, current: activeTab === 'staff_list', onClick: () => setActiveTab('staff_list') },
     { name: 'User Management', href: '/dashboard?tab=users', icon: Users, current: activeTab === 'users', onClick: () => setActiveTab('users') },
     { name: 'Appraisal Assignments', href: '/dashboard?tab=assignments', icon: ClipboardList, current: activeTab === 'assignments', onClick: () => setActiveTab('assignments') },
     { name: 'Deletion Requests', href: '/dashboard?tab=requests', icon: AlertTriangle, current: activeTab === 'requests', onClick: () => setActiveTab('requests') },
@@ -504,7 +543,269 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
         )}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          {activeTab === 'users' ? (
+          {activeTab === 'staff_list' ? (
+            <div className="space-y-8">
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">Staff List</h2>
+                  <p className="text-gray-500 mt-1">Browse all staff members, review category totals, and filter the school directory.</p>
+                </div>
+                <div className="bg-[#FDFBF7] border border-gray-100 rounded-2xl px-5 py-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Visible Results</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{filteredStaffUsers.length}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="rounded-3xl border border-gray-100 bg-[#FAE29F] p-5 shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Total Staff</p>
+                  <p className="mt-3 text-3xl font-bold text-gray-900">{staffUsers.length}</p>
+                </div>
+                {JOB_CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setStaffCategoryFilter(category)}
+                    className={`rounded-3xl border p-5 shadow-sm text-left transition-all ${staffCategoryFilter === category ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-100 bg-white text-gray-900 hover:border-gray-300'}`}
+                  >
+                    <p className={`text-xs font-bold uppercase tracking-wider ${staffCategoryFilter === category ? 'text-gray-300' : 'text-gray-500'}`}>
+                      {JOB_CATEGORY_LABELS[category]}
+                    </p>
+                    <p className="mt-3 text-3xl font-bold">{categoryCounts[category]}</p>
+                  </button>
+                ))}
+              </div>
+
+              {uncategorizedStaffCount > 0 && (
+                <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  <p className="font-semibold">
+                    {uncategorizedStaffCount} staff account(s) do not fall under the five tracked job categories.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {uncategorizedStaffUsers.map((user) => (
+                      <button
+                        key={user.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedStaffId(user.id);
+                          setIsStaffPanelCollapsed(false);
+                        }}
+                        className="rounded-full border border-amber-200 bg-white/80 px-3 py-1 text-xs font-bold text-amber-900 hover:bg-white"
+                      >
+                        {user.full_name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-3xl border border-gray-100 bg-[#FDFBF7] p-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="staff-search" className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Search Staff</label>
+                    <input
+                      id="staff-search"
+                      type="text"
+                      value={staffSearchTerm}
+                      onChange={(e) => setStaffSearchTerm(e.target.value)}
+                      placeholder="Search by name, email, role or category"
+                      className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 outline-none focus:border-gray-400"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="staff-category-filter" className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Job Category</label>
+                    <select
+                      id="staff-category-filter"
+                      value={staffCategoryFilter}
+                      onChange={(e) => setStaffCategoryFilter(e.target.value)}
+                      className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 outline-none focus:border-gray-400"
+                    >
+                      <option value="ALL">All Categories</option>
+                      {JOB_CATEGORIES.map((category) => (
+                        <option key={category} value={category}>{JOB_CATEGORY_LABELS[category]}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="staff-role-filter" className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Role</label>
+                    <select
+                      id="staff-role-filter"
+                      value={staffRoleFilter}
+                      onChange={(e) => setStaffRoleFilter(e.target.value)}
+                      className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 outline-none focus:border-gray-400"
+                    >
+                      <option value="ALL">All Roles</option>
+                      {staffRoleOptions.map((role) => (
+                        <option key={role} value={role}>{role}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStaffSearchTerm('');
+                      setStaffCategoryFilter('ALL');
+                      setStaffRoleFilter('ALL');
+                    }}
+                    className="inline-flex items-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+
+              <div className={`grid gap-6 ${isStaffPanelCollapsed ? 'grid-cols-1' : 'grid-cols-1 xl:grid-cols-[minmax(0,2fr)_380px]'}`}>
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-100">
+                      <thead className="bg-[#FDFBF7]">
+                        <tr>
+                          <th scope="col" className="px-8 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Name</th>
+                          <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Job Category</th>
+                          <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Role</th>
+                          <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Email</th>
+                          <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Joined</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-50">
+                        {filteredStaffUsers.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-8 py-10 text-center text-sm font-medium text-gray-500">
+                              No staff members match the current filters.
+                            </td>
+                          </tr>
+                        ) : filteredStaffUsers.map((user) => {
+                          const userRoles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
+                          const isSelected = selectedStaff?.id === user.id;
+
+                          return (
+                            <tr
+                              key={user.id}
+                              onClick={() => {
+                                setSelectedStaffId(user.id);
+                                setIsStaffPanelCollapsed(false);
+                              }}
+                              className={`cursor-pointer transition-colors ${isSelected ? 'bg-[#FDFBF7]' : 'hover:bg-gray-50/50'}`}
+                            >
+                              <td className="px-8 py-5 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="h-10 w-10 shrink-0 rounded-full bg-linear-to-tr from-gray-100 to-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm">
+                                    {user.full_name.charAt(0)}
+                                  </div>
+                                  <div className="ml-4">
+                                    <div className="text-sm font-bold text-gray-900">{user.full_name}</div>
+                                    <div className="text-xs text-gray-500">{isSelected ? 'Selected record' : 'School Staff Record'}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-5 whitespace-nowrap">
+                                <span className="inline-flex items-center rounded-lg bg-blue-50 px-3 py-1 text-xs font-bold text-blue-800">
+                                  {user.job_category ? JOB_CATEGORY_LABELS[user.job_category as keyof typeof JOB_CATEGORY_LABELS] || user.job_category : 'Uncategorized'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-5">
+                                <div className="flex flex-wrap gap-2 max-w-xs">
+                                  {userRoles.map((role, idx) => (
+                                    <span key={idx} className="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-lg bg-gray-100 text-gray-700">
+                                      {role}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
+                              <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-500 font-medium">{new Date(user.created_at).toLocaleDateString()}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {!isStaffPanelCollapsed && selectedStaff && (
+                  <aside className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm xl:sticky xl:top-6 h-fit">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Staff Details</p>
+                        <h3 className="mt-2 text-2xl font-bold text-gray-900 wrap-break-word">{selectedStaff.full_name}</h3>
+                        <p className="mt-1 text-sm text-gray-500 break-all">{selectedStaff.email}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsStaffPanelCollapsed(true)}
+                        className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50"
+                      >
+                        Collapse
+                      </button>
+                    </div>
+
+                    <div className="mt-6 flex items-center">
+                      <div className="h-14 w-14 shrink-0 rounded-full bg-linear-to-tr from-gray-100 to-gray-200 flex items-center justify-center text-lg font-bold text-gray-700">
+                        {selectedStaff.full_name.charAt(0)}
+                      </div>
+                      <div className="ml-4 min-w-0">
+                        <p className="text-sm font-bold text-gray-900">{selectedStaff.role}</p>
+                        <p className="text-xs text-gray-500">Primary role</p>
+                      </div>
+                    </div>
+
+                    <dl className="mt-6 space-y-4">
+                      <div>
+                        <dt className="text-xs font-bold uppercase tracking-wider text-gray-500">Job Category</dt>
+                        <dd className="mt-1 text-sm font-medium text-gray-900">
+                          {selectedStaff.job_category ? JOB_CATEGORY_LABELS[selectedStaff.job_category as keyof typeof JOB_CATEGORY_LABELS] || selectedStaff.job_category : 'Uncategorized'}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-bold uppercase tracking-wider text-gray-500">Date Added</dt>
+                        <dd className="mt-1 text-sm font-medium text-gray-900">{new Date(selectedStaff.created_at).toLocaleDateString()}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-bold uppercase tracking-wider text-gray-500">All Roles</dt>
+                        <dd className="mt-2 flex flex-wrap gap-2">
+                          {(selectedStaff.roles && selectedStaff.roles.length > 0 ? selectedStaff.roles : [selectedStaff.role]).map((role, idx) => (
+                            <span key={idx} className="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-lg bg-gray-100 text-gray-700">
+                              {role}
+                            </span>
+                          ))}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-bold uppercase tracking-wider text-gray-500">Assigned Appraisers</dt>
+                        <dd className="mt-2 space-y-2">
+                          {(selectedStaff.roles && selectedStaff.roles.length > 0 ? selectedStaff.roles : [selectedStaff.role]).map((role, idx) => {
+                            const appraiserId = assignments[selectedStaff.id]?.[role] || (role === selectedStaff.role ? assignments[selectedStaff.id]?.PRIMARY : undefined);
+                            const appraiser = users.find(user => user.id === appraiserId);
+
+                            return (
+                              <div key={idx} className="rounded-2xl border border-gray-100 bg-[#FDFBF7] px-4 py-3">
+                                <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{role}</p>
+                                <p className="mt-1 text-sm font-medium text-gray-900">{appraiser?.full_name || 'Unassigned'}</p>
+                              </div>
+                            );
+                          })}
+                        </dd>
+                      </div>
+                    </dl>
+                  </aside>
+                )}
+
+                {isStaffPanelCollapsed && selectedStaff && (
+                  <div className="flex justify-end xl:col-span-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsStaffPanelCollapsed(false)}
+                      className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50"
+                    >
+                      Show {selectedStaff.full_name} details
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : activeTab === 'users' ? (
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
                 <div>
@@ -1266,7 +1567,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
           <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 rounded-t-lg">
               <div className="sm:flex sm:items-start text-center sm:text-left">
-                 <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
+                 <div className="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
                     <Key className="h-6 w-6 text-orange-600" />
                  </div>
                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
