@@ -4,7 +4,6 @@ export const LEADERSHIP_SAMPLE_DATA = [
   // Senior Leadership
   { full_name: 'Sarah Manager', role: 'SCHOOL MANAGER' as UserRole, email: 'manager@school.com', jobCategory: 'SENIOR_LEADERSHIP' },
   { full_name: 'Henry Head', role: 'HEAD TEACHER' as UserRole, email: 'headteacher@school.com', jobCategory: 'SENIOR_LEADERSHIP' },
-  { full_name: 'Fiona Finance', role: 'FINANCE OFFICER' as UserRole, email: 'finance@school.com', jobCategory: 'SENIOR_LEADERSHIP' },
   { full_name: 'Oliver Ops', role: 'OPERATIONS OFFICER' as UserRole, email: 'operations@school.com', jobCategory: 'SENIOR_LEADERSHIP' },
 
   // Intermediate Leadership

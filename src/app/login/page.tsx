@@ -68,23 +68,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 w-full">
+      <div className="mx-auto w-full max-w-md sm:max-w-md my-auto flex flex-col justify-center items-center">
+        <div className="flex justify-center w-full">
           <div className="h-16 w-16 bg-white/10 backdrop-blur-lg rounded-2xl flex items-center justify-center shadow-xl border border-white/20">
             <Shield className="h-10 w-10 text-white" />
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight w-full">
           Urafiki Carovana
         </h2>
-        <p className="mt-2 text-center text-lg text-blue-200 font-medium">
+        <p className="mt-2 text-center text-lg text-blue-200 font-medium w-full mb-8">
           Appraisal System
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white/95 backdrop-blur-sm py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-white/50">
+      <div className="mx-auto w-full max-w-md sm:max-w-md mb-auto">
+        <div className="bg-white/95 backdrop-blur-sm py-8 px-4 shadow-2xl sm:rounded-2xl rounded-xl sm:px-10 border border-white/50 w-full">
           <form className="space-y-6" onSubmit={handleLogin}>
             
             {/* Role Selection */}

@@ -64,7 +64,7 @@ function DashboardContent() {
       return <ChangePasswordForm userId={userData.id} />;
   }
 
-  if (userData.role === 'DIRECTOR') {
+  if (userData.role === 'DIRECTOR' || userData.role === 'SUPER ADMIN') {
     return <DirectorDashboard currentUser={currentUser} initialTab={initialTab || undefined} />;
   }
 

@@ -424,12 +424,12 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
   ];
 
   return (
-    <DashboardLayout currentUser={currentUser as any} role="DIRECTOR" customNavigation={navigation}>
+    <DashboardLayout currentUser={currentUser as any} role={(currentUser as any).role as string} customNavigation={navigation}>
       <div className="space-y-6">
         {/* Content */}
         {activeTab === 'overview' && (
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Good morning, Director</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Good morning, {(currentUser as any).role === 'SUPER ADMIN' ? 'Super Admin' : 'Director'}</h2>
             <p className="text-gray-500 mb-8">Here is an overview of the appraisal system status today.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -18,6 +18,7 @@ import {
   Check
 } from 'lucide-react';
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export interface NavigationItem {
   name: string;
@@ -30,7 +31,7 @@ export interface NavigationItem {
 interface DashboardLayoutProps {
   children: React.ReactNode;
   currentUser: { id: string; email?: string; full_name?: string; role?: string };
-  role: 'APPRAISER' | 'DIRECTOR';
+  role: 'APPRAISER' | 'DIRECTOR' | 'SUPER ADMIN' | string;
   customNavigation?: NavigationItem[];
 }
 
@@ -41,9 +42,9 @@ export default function DashboardLayout({ children, currentUser, role, customNav
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
-  // Load notifications (for Director only)
+  // Load notifications (for Director or Super Admin only)
   useEffect(() => {
-    if (role !== 'DIRECTOR') return;
+    if (role !== 'DIRECTOR' && role !== 'SUPER ADMIN') return;
 
     let mounted = true;
 
@@ -84,7 +85,7 @@ export default function DashboardLayout({ children, currentUser, role, customNav
     router.push('/login');
   };
 
-  const defaultNavigation: NavigationItem[] = role === 'DIRECTOR' ? [
+  const defaultNavigation: NavigationItem[] = role === 'DIRECTOR' || role === 'SUPER ADMIN' ? [
     { name: 'Dashboard', href: '/dashboard?tab=overview', icon: LayoutDashboard, current: false },
     { name: 'User Management', href: '/dashboard?tab=users', icon: Users, current: false },
     { name: 'Assignments', href: '/dashboard?tab=assignments', icon: ClipboardList, current: false },
@@ -102,7 +103,7 @@ export default function DashboardLayout({ children, currentUser, role, customNav
   const navigation = customNavigation || defaultNavigation;
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex font-sans text-gray-900">
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#0a0a0a] flex font-sans text-gray-900 dark:text-gray-100 transition-colors">
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#1A1A1A] text-gray-400 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-0 print:hidden flex flex-col rounded-r-3xl m-0 lg:my-4 lg:ml-4 h-[calc(100vh-2rem)] shadow-2xl`}>
         <div className="flex items-center justify-between h-24 px-8">
@@ -172,14 +173,14 @@ export default function DashboardLayout({ children, currentUser, role, customNav
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-screen">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-screen bg-[#FDFBF7] dark:bg-[#0a0a0a]">
         {/* Top Header */}
         <header className="flex items-center justify-between px-8 py-6 print:hidden">
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-gray-500">
                 <Menu className="h-8 w-8" />
             </button>
             
-            <div className="flex-1 max-w-2xl flex items-center bg-white rounded-full px-4 py-2 shadow-sm border border-gray-100 ml-4 lg:ml-0">
+            <div className="flex-1 max-w-2xl flex items-center bg-white dark:bg-gray-800 rounded-full px-4 py-2 shadow-sm border border-gray-100 dark:border-gray-700 ml-4 lg:ml-0 transition-colors">
                 <input 
                     type="text" 
                     placeholder="Search..." 
@@ -191,13 +192,14 @@ export default function DashboardLayout({ children, currentUser, role, customNav
                         router.push(`/dashboard?term=${encodeURIComponent(searchTerm)}`);
                       }
                     }}
-                    className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-gray-700 placeholder-gray-400 indent-0"
+                    className="flex-1 bg-transparent outline-none border-none focus:ring-0 text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 indent-0"
                 />
             </div>
 
             <div className="flex items-center space-x-4 ml-4">
+                <ThemeToggle />
                 <div className="relative">
-                  <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="p-2 rounded-full bg-white text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100 relative">
+                  <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="p-2 rounded-full bg-white text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100 relative dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:text-white">
                       <Bell className="h-5 w-5" />
                       {notifications.length > 0 && (
                         <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
@@ -205,10 +207,10 @@ export default function DashboardLayout({ children, currentUser, role, customNav
                   </button>
 
                   {isNotifOpen && (
-                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-100 p-3 z-50">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Notifications</h4>
+                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 p-3 z-50 transition-colors">
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Notifications</h4>
                       {notifications.length === 0 ? (
-                        <p className="text-xs text-gray-500">No new notifications</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">No new notifications</p>
                       ) : (
                         <ul className="space-y-2 max-h-60 overflow-y-auto">
                           {notifications.map((n) => (
@@ -216,9 +218,9 @@ export default function DashboardLayout({ children, currentUser, role, customNav
                               <button onClick={() => {
                                 setIsNotifOpen(false);
                                 router.push(`/dashboard/appraisal/${n.appraisee_id}?appraisalId=${n.id}`);
-                              }} className="text-left w-full text-sm hover:bg-gray-50 p-2 rounded">
-                                <p className="font-medium text-gray-800">{n.message}</p>
-                                <p className="text-xs text-gray-500">{new Date(n.updated_at).toLocaleString()}</p>
+                              }} className="text-left w-full text-sm hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded transition-colors">
+                                <p className="font-medium text-gray-800 dark:text-gray-200">{n.message}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(n.updated_at).toLocaleString()}</p>
                               </button>
                             </li>
                           ))}

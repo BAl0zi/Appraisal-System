@@ -1,8 +1,8 @@
 export const ROLES = [
+  'SUPER ADMIN',
   'DIRECTOR',
   'SCHOOL MANAGER',
   'HEAD TEACHER',
-  'FINANCE OFFICER',
   'OPERATIONS OFFICER',
   'SECTION HEAD UPPER PRIMARY',
   'SECTION HEAD JUNIOR SCHOOL',
@@ -39,13 +39,14 @@ export type RoleCategory =
   | 'FIRSTLINE_LEADERSHIP'
   | 'INTERMEDIATE_LEADERSHIP'
   | 'SENIOR_LEADERSHIP'
+  | 'SUPER_ADMIN'
   | 'DIRECTOR';
 
 export const ROLE_HIERARCHY: Record<UserRole, RoleCategory> = {
+  'SUPER ADMIN': 'SUPER_ADMIN',
   'DIRECTOR': 'DIRECTOR',
   'SCHOOL MANAGER': 'SENIOR_LEADERSHIP',
   'HEAD TEACHER': 'SENIOR_LEADERSHIP',
-  'FINANCE OFFICER': 'SENIOR_LEADERSHIP',
   'OPERATIONS OFFICER': 'SENIOR_LEADERSHIP',
   'SECTION HEAD UPPER PRIMARY': 'INTERMEDIATE_LEADERSHIP',
   'SECTION HEAD JUNIOR SCHOOL': 'INTERMEDIATE_LEADERSHIP',
@@ -62,9 +63,9 @@ export const ROLE_HIERARCHY: Record<UserRole, RoleCategory> = {
   'SPECIAL ROLES': 'FIRSTLINE_LEADERSHIP',
   'TEACHERS': 'TEACHING',
   'SPECIAL NEEDS TEACHER': 'TEACHING',
-  'LAB TECHNICIAN': 'TEACHING',
-  'LIBRARIAN': 'TEACHING',
   'COACH': 'TEACHING',
+  'LAB TECHNICIAN': 'NON_TEACHING',
+  'LIBRARIAN': 'NON_TEACHING',
   'ACCOUNTANT': 'NON_TEACHING',
   'SECRETARY': 'NON_TEACHING',
   'ICT TECHNICIANS': 'NON_TEACHING',
@@ -89,8 +90,10 @@ export const getRoleCategory = (role: string): RoleCategory => {
   if (normalizedRole === 'CLEANER') return 'NON_TEACHING';
   if (normalizedRole === 'CARETAKER') return 'NON_TEACHING';
   if (normalizedRole === 'ICT TECHNICIAN') return 'NON_TEACHING';
+  if (normalizedRole === 'LAB TECHNICIAN') return 'NON_TEACHING';
+  if (normalizedRole === 'LIBRARIAN') return 'NON_TEACHING';
+  if (normalizedRole === 'SECRETARY') return 'NON_TEACHING';
   if (normalizedRole === 'CLASS TEACHER') return 'FIRSTLINE_LEADERSHIP';
-  if (normalizedRole === 'LAB TECHNICIAN') return 'TEACHING';
   if (normalizedRole === 'SPECIAL NEEDS TEACHER') return 'TEACHING';
   if (normalizedRole === 'COACH') return 'TEACHING';
 

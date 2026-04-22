@@ -105,23 +105,49 @@ export async function resetSystemForProduction(directorEmail?: string, directorP
     }
 
     // 6. Delete Users from Auth (except Directors)
-    const { data: { users: authUsers }, error: listUsersError } = await supabaseAdmin.auth.admin.listUsers();
-    
-    if (listUsersError) {
-         throw new Error(`Failed to list auth users: ${listUsersError.message}`);
-    }
+    // Fetch in batches to handle pagination (default limit is 50)
+    let hasMoreUsers = true;
+    let deletedCount = 0;
 
-    const usersToDelete = authUsers.filter(u => !directorIds.includes(u.id));
+    while (hasMoreUsers) {
+        // Fetch a large batch
+        const { data: { users: authUsers }, error: listUsersError } = await supabaseAdmin.auth.admin.listUsers({
+            page: 1,
+            perPage: 1000
+        });
+        
+        if (listUsersError) {
+             throw new Error(`Failed to list auth users: ${listUsersError.message}`);
+        }
 
-    for (const user of usersToDelete) {
-        const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
-        if (deleteAuthError) {
-            console.error(`Failed to delete auth user ${user.email}:`, deleteAuthError);
+        const usersToDelete = authUsers.filter(u => !directorIds.includes(u.id));
+        
+        if (usersToDelete.length === 0) {
+            // No actionable users in this batch.
+            // If the batch size was less than requested, we are at the end.
+            // If the batch was full but all were directors, we might need to check next page?
+            // But since we are deleting non-directors, eventually page 1 will only contain directors.
+            // If ALL users in the system are Directors, we stop.
+            hasMoreUsers = false;
+        } else {
+            console.log(`Found ${usersToDelete.length} users to delete in this batch...`);
+            
+            // Delete sequentially to avoid rate limits
+            for (const user of usersToDelete) {
+                const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+                if (deleteAuthError) {
+                    console.error(`Failed to delete auth user ${user.email}:`, deleteAuthError);
+                } else {
+                    deletedCount++;
+                }
+            }
+            
+            // We deleted users, so the list has changed. Loop again to fetch the next batch (which is now page 1).
         }
     }
 
     revalidatePath('/');
-    return { success: true, message: `System reset complete. Preserved Directors: ${directorEmails.join(', ')}. Deleted ${usersToDelete.length} other users.` };
+    return { success: true, message: `System reset complete. Preserved Directors: ${directorEmails.join(', ')}. Deleted ${deletedCount} other users.` };
 
   } catch (error: any) {
     console.error('Reset failed:', error);
