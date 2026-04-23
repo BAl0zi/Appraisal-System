@@ -245,7 +245,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   };
 
   const handleObservationRating = (index: number, rating: number) => {
-    if (isCompleted || isObservationSubmitted) return;
+    if (isCompleted) return;
     const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
     setFormData({
       ...formData,
@@ -260,7 +260,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   };
 
   const handleDocumentRating = (index: number, status: string) => {
-    if (isCompleted || isObservationSubmitted) return;
+    if (isCompleted) return;
     const key = activeObservation === 'FIRST' ? 'observation1' : 'observation2';
     setFormData({
       ...formData,
@@ -275,7 +275,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   };
 
   const handleEvaluationRating = (index: number, rating: number) => {
-    if (isCompleted || isEvaluationSubmitted) return;
+    if (isCompleted) return;
     setFormData({
       ...formData,
       evaluation: {
@@ -654,10 +654,12 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
               {isTargetsSubmitted ? (
                 <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
                   <CheckCircle className="h-4 w-4 mr-1" /> Completed
+                  {!isCompleted && <span onClick={(e) => { e.stopPropagation(); setCurrentView('TARGETS'); }} className="ml-2 text-blue-500 hover:text-blue-700 underline text-[10px] cursor-pointer normal-case">Edit</span>}
                 </div>
               ) : isTargetsSet ? (
                 <div className="absolute top-4 right-4 text-yellow-600 flex items-center text-xs font-bold uppercase tracking-wider">
                   <CheckCircle className="h-4 w-4 mr-1" /> Phase 1 Done
+                  {!isCompleted && <span onClick={(e) => { e.stopPropagation(); setCurrentView('TARGETS'); }} className="ml-2 text-blue-500 hover:text-blue-700 underline text-[10px] cursor-pointer normal-case">Edit</span>}
                 </div>
               ) : null}
               <div className="p-4 bg-blue-50 rounded-full mb-4 group-hover:bg-blue-100">
@@ -681,6 +683,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
             {formData.observation1?.status === 'COMPLETED' && (
               <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
                 <CheckCircle className="h-4 w-4 mr-1" /> Completed
+                {!isCompleted && <span onClick={(e) => { e.stopPropagation(); setActiveObservation('FIRST'); setObservationViewMode('FORM'); setCurrentView('OBSERVATION'); }} className="ml-2 text-blue-500 hover:text-blue-700 underline text-[10px] cursor-pointer normal-case">Edit</span>}
               </div>
             )}
             <div className="p-4 bg-purple-50 rounded-full mb-4 group-hover:bg-purple-100">
@@ -704,6 +707,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
             {formData.observation2?.status === 'COMPLETED' && (
               <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
                 <CheckCircle className="h-4 w-4 mr-1" /> Completed
+                {!isCompleted && <span onClick={(e) => { e.stopPropagation(); setActiveObservation('SECOND'); setObservationViewMode('FORM'); setCurrentView('OBSERVATION'); }} className="ml-2 text-blue-500 hover:text-blue-700 underline text-[10px] cursor-pointer normal-case">Edit</span>}
               </div>
             )}
             <div className="p-4 bg-purple-50 rounded-full mb-4 group-hover:bg-purple-100">
@@ -722,6 +726,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
             {isEvaluationSubmitted && (
               <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
                 <CheckCircle className="h-4 w-4 mr-1" /> Completed
+                {!isCompleted && <span onClick={(e) => { e.stopPropagation(); setCurrentView('EVALUATION'); }} className="ml-2 text-blue-500 hover:text-blue-700 underline text-[10px] cursor-pointer normal-case">Edit</span>}
               </div>
             )}
             <div className="p-4 bg-orange-50 rounded-full mb-4 group-hover:bg-orange-100">
@@ -1134,7 +1139,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                     : 'Phase 2: Enter actual results and sign to complete.'}
                 </p>
               </div>
-              {!isTargetsSet && !isCompleted && (
+              {!isCompleted && (
                 <button onClick={addTarget} className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200">
                   <Plus className="h-4 w-4 mr-1" /> Add Target
                 </button>
@@ -1150,7 +1155,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Actual (%)</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Remarks</th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">% Achieved</th>
-                      {!isTargetsSet && !isCompleted && <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>}
+                      {!isCompleted && <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -1172,7 +1177,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                   );
                                   setFormData({ ...formData, targets: newTargets });
                                 }}
-                                disabled={isTargetsSet || isCompleted}
+                                disabled={isCompleted}
                                 className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white font-bold"
                                 placeholder="Area of focus"
                               />
@@ -1184,7 +1189,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                   );
                                   setFormData({ ...formData, targets: newTargets });
                                 }}
-                                disabled={isTargetsSet || isCompleted}
+                                disabled={isCompleted}
                                 rows={2}
                                 className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-xs border-gray-300 rounded-md disabled:bg-gray-100 text-gray-600 bg-white"
                                 placeholder="Description of the target..."
@@ -1201,7 +1206,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                 );
                                 setFormData({ ...formData, targets: newTargets });
                               }}
-                              disabled={isTargetsSet || isCompleted}
+                              disabled={isCompleted}
                               className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
                               placeholder="Target (%)"
                             />
@@ -1216,7 +1221,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                 );
                                 setFormData({ ...formData, targets: newTargets });
                               }}
-                              disabled={!isTargetsSet || isTargetsSubmitted || isCompleted}
+                              disabled={!isTargetsSet || isCompleted}
                               className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
                               placeholder={!isTargetsSet ? "Set targets first" : "Actual (%)"}
                             />
@@ -1230,7 +1235,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                   );
                                   setFormData({ ...formData, targets: newTargets });
                                 }}
-                                disabled={!isTargetsSet || isTargetsSubmitted || isCompleted}
+                                disabled={!isTargetsSet || isCompleted}
                                 rows={3}
                                 className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-xs border-gray-300 rounded-md disabled:bg-gray-100 text-gray-600 bg-white"
                                 placeholder={!isTargetsSet ? "Set targets first" : "Explain why target was reached or not..."}
@@ -1239,7 +1244,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-top">
                             {pct}%
                           </td>
-                          {!isTargetsSet && !isCompleted && (
+                          {!isCompleted && (
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
                               <button onClick={() => removeTarget(target.id)} className="text-red-600 hover:text-red-900" aria-label="Remove Target">
                                 <Trash2 className="h-4 w-4" />
@@ -1276,7 +1281,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                       }
                     });
                   }}
-                  disabled={isTargetsSet || isCompleted}
+                  disabled={isCompleted}
                   date={formData.targetSignatures?.appraiseeDate || ''}
                   onDateChange={(date) => {
                     setFormData({
@@ -1302,7 +1307,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                       }
                     });
                   }}
-                  disabled={isTargetsSet || isCompleted}
+                  disabled={isCompleted}
                   date={formData.targetSignatures?.appraiserDate || ''}
                   onDateChange={(date) => {
                     setFormData({
@@ -1340,7 +1345,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         }
                       });
                     }}
-                    disabled={isTargetsSubmitted || isCompleted}
+                    disabled={isCompleted}
                     date={formData.targetReviewSignatures?.appraiseeDate || ''}
                     onDateChange={(date) => {
                       setFormData({
@@ -1366,7 +1371,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         }
                       });
                     }}
-                    disabled={isTargetsSubmitted || isCompleted}
+                    disabled={isCompleted}
                     date={formData.targetReviewSignatures?.appraiserDate || ''}
                     onDateChange={(date) => {
                       setFormData({
@@ -1415,6 +1420,20 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
               >
                 {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 {loading ? 'Submitting...' : 'Complete Targets (Phase 2)'}
+              </button>
+            )}
+
+            {(isTargetsSet || isTargetsSubmitted) && !isCompleted && (
+              <button
+                type="button"
+                onClick={() => {
+                  handleSubmit(existingAppraisal?.status || 'DRAFT').then(() => setCurrentView('MENU'));
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                {loading ? 'Saving...' : 'Done Editing'}
               </button>
             )}
           </div>
@@ -1466,7 +1485,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                           [key]: { ...formData[key], classGrade: e.target.value }
                         });
                       }}
-                      disabled={isCompleted || isObservationSubmitted}
+                      disabled={isCompleted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
@@ -1485,7 +1504,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                           [key]: { ...formData[key], time: e.target.value }
                         });
                       }}
-                      disabled={isCompleted || isObservationSubmitted}
+                      disabled={isCompleted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
@@ -1504,7 +1523,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                           [key]: { ...formData[key], learnersPresent: e.target.value }
                         });
                       }}
-                      disabled={isCompleted || isObservationSubmitted}
+                      disabled={isCompleted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
@@ -1523,7 +1542,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                           [key]: { ...formData[key], date: e.target.value }
                         });
                       }}
-                      disabled={isCompleted || isObservationSubmitted}
+                      disabled={isCompleted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
@@ -1542,7 +1561,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                           [key]: { ...formData[key], subject: e.target.value }
                         });
                       }}
-                      disabled={isCompleted || isObservationSubmitted}
+                      disabled={isCompleted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
@@ -1561,7 +1580,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                           [key]: { ...formData[key], topic: e.target.value }
                         });
                       }}
-                      disabled={isCompleted || isObservationSubmitted}
+                      disabled={isCompleted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
@@ -1587,7 +1606,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                           [key]: { ...formData[key], time: e.target.value }
                         });
                       }}
-                      disabled={isCompleted || isObservationSubmitted}
+                      disabled={isCompleted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
@@ -1606,7 +1625,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                           [key]: { ...formData[key], date: e.target.value }
                         });
                       }}
-                      disabled={isCompleted || isObservationSubmitted}
+                      disabled={isCompleted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
@@ -1625,7 +1644,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                           [key]: { ...formData[key], workAppraised: e.target.value }
                         });
                       }}
-                      disabled={isCompleted || isObservationSubmitted}
+                      disabled={isCompleted}
                       className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
@@ -1658,7 +1677,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                               name={`observation-rating-${index}`}
                               checked={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.ratings?.[index] === rating}
                               onChange={() => handleObservationRating(index, rating)}
-                              disabled={isCompleted || isObservationSubmitted}
+                              disabled={isCompleted}
                               className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 disabled:opacity-50"
                               aria-label={`Rating ${rating} for parameter ${index + 1}`}
                             />
@@ -1724,7 +1743,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                 name={`document-status-${index}`}
                                 checked={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.documents?.[index] === status}
                                 onChange={() => handleDocumentRating(index, status)}
-                                disabled={isCompleted || isObservationSubmitted}
+                                disabled={isCompleted}
                                 className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 disabled:opacity-50"
                                 aria-label={`${status.replace('_', ' ')} for document ${index + 1}`}
                               />
@@ -1785,6 +1804,20 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                       Mark as Completed
                     </button>
                   )}
+
+                  {formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.status === 'COMPLETED' && !isCompleted && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleSubmit(existingAppraisal?.status || 'DRAFT').then(() => setCurrentView('MENU'));
+                      }}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={loading}
+                    >
+                      {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                      {loading ? 'Saving...' : 'Done Editing'}
+                    </button>
+                  )}
                 </div>
               </div>
           </>
@@ -1832,7 +1865,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                               name={`evaluation-rating-${index}`}
                               checked={formData.evaluation?.ratings?.[index] === rating}
                               onChange={() => handleEvaluationRating(index, rating)}
-                              disabled={isCompleted || isEvaluationSubmitted}
+                              disabled={isCompleted}
                               className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 disabled:opacity-50"
                               aria-label={`Rating ${rating} for parameter ${index + 1}`}
                             />
@@ -1947,7 +1980,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
             </div>
           </div>
 
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 flex justify-end space-x-4">
             {!isEvaluationSubmitted && (
               <button
                 onClick={() => handleSubmit('EVALUATION_SUBMITTED')}
@@ -1956,6 +1989,19 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
               >
                 {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 {loading ? 'Submitting...' : 'Submit Evaluation'}
+              </button>
+            )}
+
+            {isEvaluationSubmitted && !isCompleted && (
+              <button
+                onClick={() => {
+                  handleSubmit(existingAppraisal?.status || 'DRAFT').then(() => setCurrentView('MENU'));
+                }}
+                disabled={loading}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                {loading ? 'Saving...' : 'Done Editing'}
               </button>
             )}
           </div>
