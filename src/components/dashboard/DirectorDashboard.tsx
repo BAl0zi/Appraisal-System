@@ -42,6 +42,9 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
   const [activeTab, setActiveTab] = useState<'overview' | 'staff_list' | 'users' | 'assignments' | 'requests' | 'appraisals' | 'reports' | 'my_appraisals' | 'settings'>((initialTab as any) || 'overview');
   const searchParams = useSearchParams();
   const searchTermParam = searchParams?.get('term');
+
+  const isSuperAdmin = currentUser && users.find(u => u.id === currentUser.id)?.role === 'SUPER ADMIN';
+
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [resetPasswordResult, setResetPasswordResult] = useState<{ name: string; password: string } | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -423,13 +426,15 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
     { name: 'Settings', href: '/dashboard?tab=settings', icon: Settings, current: activeTab === 'settings', onClick: () => setActiveTab('settings') },
   ];
 
+  const loggedInUserRole = isSuperAdmin ? 'SUPER ADMIN' : 'DIRECTOR';
+
   return (
-    <DashboardLayout currentUser={currentUser as any} role={(currentUser as any).role as string} customNavigation={navigation}>
+    <DashboardLayout currentUser={currentUser as any} role={loggedInUserRole} customNavigation={navigation}>
       <div className="space-y-6">
         {/* Content */}
         {activeTab === 'overview' && (
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Good morning, {(currentUser as any).role === 'SUPER ADMIN' ? 'Super Admin' : 'Director'}</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Good morning, {isSuperAdmin ? 'Super Admin' : 'Director'}</h2>
             <p className="text-gray-500 mb-8">Here is an overview of the appraisal system status today.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -512,7 +517,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                         </div>
                          <div className="flex justify-between items-center bg-white/30 p-3 rounded-xl">
                             <span className="text-sm font-medium text-gray-900">Role</span>
-                            <span className="text-xs font-bold text-green-900">DIRECTOR</span>
+                            <span className="text-xs font-bold text-green-900">{isSuperAdmin ? 'SUPER ADMIN' : 'DIRECTOR'}</span>
                         </div>
                      </div>
                  </div>
@@ -896,7 +901,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                                 </span>
                               </td>
                               <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
-                                {user.role !== 'DIRECTOR' && (
+                                {(user.role !== 'DIRECTOR' || isSuperAdmin) && user.id !== currentUser?.id && (
                                   <div className="flex justify-end space-x-2">
                                      <button
                                       onClick={() => setEditingUser(user)}
@@ -1222,7 +1227,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-50">
-                        {users.filter(u => u.role !== 'DIRECTOR').flatMap((user) => {
+                        {users.filter(u => u.role !== 'DIRECTOR' || isSuperAdmin).flatMap((user) => {
                           const userRoles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
                           
                           return userRoles.map(role => {
@@ -1484,7 +1489,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                         <div>
                           <label htmlFor="role" className="block text-sm font-medium text-gray-700">System Role</label>
                           <select name="role" id="role" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white">
-                            {ROLES.filter(role => role !== 'DIRECTOR').map(role => (
+                            {ROLES.filter(role => role !== 'DIRECTOR' || isSuperAdmin).map(role => (
                               <option key={role} value={role}>{role}</option>
                             ))}
                           </select>
@@ -1530,7 +1535,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                         <div>
                           <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700">System Role</label>
                           <select name="role" id="edit-role" defaultValue={editingUser.role} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white">
-                            {ROLES.filter(role => role !== 'DIRECTOR').map(role => (
+                            {ROLES.filter(role => role !== 'DIRECTOR' || isSuperAdmin).map(role => (
                               <option key={role} value={role}>{role}</option>
                             ))}
                           </select>

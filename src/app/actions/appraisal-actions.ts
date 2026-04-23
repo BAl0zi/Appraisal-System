@@ -166,8 +166,8 @@ export async function resetAppraisalStatus(appraisalId: string, newStatus: strin
     .eq('id', user.id)
     .single();
 
-  if (userData?.role !== 'DIRECTOR') {
-    return { success: false, error: 'Only Directors can reset appraisal status' };
+  if (userData?.role !== 'DIRECTOR' && userData?.role !== 'SUPER ADMIN') {
+    return { success: false, error: 'Only Directors or Super Admins can reset appraisal status' };
   }
 
   const { error } = await supabaseAdmin

@@ -80,8 +80,8 @@ export default function AssignmentManager({ users, assignments, onUpdate }: Assi
     setLoading(null);
   };
 
-  // Filter out Directors from being appraisees
-  const appraisees = users.filter(u => u.role !== 'DIRECTOR');
+  // Filter out SUPER ADMINs from being appraisees
+  const appraisees = users.filter(u => u.role !== 'SUPER ADMIN');
   const potentialAppraisers = users;
 
   // Flatten users into assignable items (User + Role)
