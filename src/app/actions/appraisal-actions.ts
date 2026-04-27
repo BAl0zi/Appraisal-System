@@ -118,6 +118,29 @@ export async function requestDeletion(appraisalId: string, reason: string) {
   return { success: true };
 }
 
+export async function deleteAppraisal(appraisalId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const { error } = await supabaseAdmin
+    .from('appraisals')
+    .delete()
+    .eq('id', appraisalId)
+    .eq('appraiser_id', user.id);
+
+  if (error) {
+    console.error('Error deleting appraisal:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
 export async function approveDeletion(appraisalId: string) {
   const { error } = await supabaseAdmin
     .from('appraisals')

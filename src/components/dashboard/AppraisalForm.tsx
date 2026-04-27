@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { saveAppraisal } from '@/app/actions/appraisal-actions';
+import { saveAppraisal, deleteAppraisal } from '@/app/actions/appraisal-actions';
 import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, Printer, Download, CheckCircle, ClipboardList, Loader2 } from 'lucide-react';
 import SignatureInput from '../SignatureInput';
 import { getRoleCategory, UserRole } from '@/constants/roles';
@@ -435,6 +435,27 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
     setLoading(false);
   };
 
+  const handleDeleteForm = async () => {
+    if (!existingAppraisal || !existingAppraisal.id) {
+       return;
+    }
+    if (!confirm('Are you sure you want to permanently delete this appraisal? This action cannot be undone.')) {
+        return;
+    }
+    setLoading(true);
+    setMessage(null);
+    const result = await deleteAppraisal(existingAppraisal.id);
+    if (result.success) {
+        setMessage({ type: 'success', text: 'Appraisal deleted successfully.' });
+        setTimeout(() => {
+          router.push(`/dashboard/appraiser/${appraiserId}`);
+        }, 1500);
+    } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to delete appraisal.' });
+        setLoading(false);
+    }
+  };
+
   const handleSubmit = async (status: string) => {
     setLoading(true);
     setMessage(null);
@@ -826,6 +847,17 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
             >
               <Save className="h-4 w-4 mr-2" />
               Save Progress
+            </button>
+          )}
+          {appraisalRole === 'APPRAISER' && (
+            <button
+              onClick={handleDeleteForm}
+              disabled={loading}
+              className="inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              title="Permanently Delete Appraisal"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Appraisal
             </button>
           )}
         </div>

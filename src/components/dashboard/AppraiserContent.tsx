@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Users, FileText, CheckCircle, Clock, Play, LogOut, Trash2, History, Loader2, Key, AlertTriangle, Check } from 'lucide-react';
-import { requestDeletion } from '@/app/actions/appraisal-actions';
+import { deleteAppraisal } from '@/app/actions/appraisal-actions';
 
 interface AppraiserContentProps {
   currentUser: { id: string; email?: string; full_name?: string };
@@ -104,20 +104,19 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
     setIsHistoryModalOpen(true);
   };
 
-  const handleRequestDeletion = async () => {
-    if (!selectedAppraisalId || !deleteReason) return;
+  const handleDeleteAppraisal = async () => {
+    if (!selectedAppraisalId) return;
     
-    const result = await requestDeletion(selectedAppraisalId, deleteReason);
+    const result = await deleteAppraisal(selectedAppraisalId);
     
     if (result.success) {
-      setMessage({ type: 'success', text: 'Deletion request submitted successfully.' });
+      setMessage({ type: 'success', text: 'Appraisal deleted successfully.' });
       setIsDeleteModalOpen(false);
-      setDeleteReason('');
       setSelectedAppraisalId(null);
       // Refresh data
       window.location.reload(); 
     } else {
-      setMessage({ type: 'error', text: result.error || 'Failed to submit request.' });
+      setMessage({ type: 'error', text: result.error || 'Failed to delete appraisal.' });
     }
   };
 
@@ -526,14 +525,14 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                                 <History className="h-4 w-4" />
                               </button>
 
-                              {!isDeletionRequested && (status === 'TARGETS_SUBMITTED' || status === 'COMPLETED' || status === 'SIGNED') && (
+                              {appraisal?.id && (
                                 <button
                                   onClick={() => {
                                     setSelectedAppraisalId(appraisal.id);
                                     setIsDeleteModalOpen(true);
                                   }}
                                   className="p-2 text-gray-400 hover:text-red-600 bg-transparent hover:bg-red-50 rounded-lg transition-all"
-                                  title="Request Deletion"
+                                  title="Delete Appraisal"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -755,7 +754,7 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
           </div>
         )}
 
-        {/* Deletion Request Modal */}
+        {/* Deletion Modal */}
         {isDeleteModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="w-full max-w-lg rounded-lg bg-white shadow-xl">
@@ -765,22 +764,11 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                     <Trash2 className="h-6 w-6 text-red-600" />
                   </div>
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">Request Deletion</h3>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Delete Appraisal</h3>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">
-                        Please provide a reason for requesting deletion of this appraisal. This request will be sent to the Director for approval.
+                        Are you sure you want to permanently delete this appraisal? This action cannot be undone.
                       </p>
-                    </div>
-                    <div className="mt-4">
-                      <label htmlFor="reason" className="block text-sm font-medium text-gray-700">Reason</label>
-                      <textarea
-                        id="reason"
-                        rows={3}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm text-gray-900 bg-white"
-                        value={deleteReason}
-                        onChange={(e) => setDeleteReason(e.target.value)}
-                        required
-                      />
                     </div>
                   </div>
                 </div>
@@ -789,9 +777,9 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                 <button
                   type="button"
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={handleRequestDeletion}
+                  onClick={handleDeleteAppraisal}
                 >
-                  Submit Request
+                  Delete
                 </button>
                 <button
                   type="button"

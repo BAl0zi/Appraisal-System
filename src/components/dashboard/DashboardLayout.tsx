@@ -85,6 +85,37 @@ export default function DashboardLayout({ children, currentUser, role, customNav
     router.push('/login');
   };
 
+  // Session Timeout Logic (1 hour of inactivity)
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      // Set to 1 hour (60 * 60 * 1000 = 3600000 ms)
+      timeoutId = setTimeout(() => {
+        handleSignOut();
+      }, 3600000); 
+    };
+
+    // Initialize timer
+    resetTimer();
+
+    // Event listeners to reset timer on user activity
+    const events = ['mousemove', 'keydown', 'wheel', 'scroll', 'mousedown', 'touchstart'];
+    
+    events.forEach(event => {
+      window.addEventListener(event, resetTimer, { passive: true });
+    });
+
+    // Cleanup on unmount
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [router]);
+
   const defaultNavigation: NavigationItem[] = role === 'DIRECTOR' || role === 'SUPER ADMIN' ? [
     { name: 'Dashboard', href: '/dashboard?tab=overview', icon: LayoutDashboard, current: false },
     { name: 'User Management', href: '/dashboard?tab=users', icon: Users, current: false },
