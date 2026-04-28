@@ -54,6 +54,62 @@ export const NON_TEACHING_EVALUATION_PARAMETERS = [
   "Participates actively in School's activities"
 ];
 
+export const FIRSTLINE_LEADERSHIP_EVALUATION_PARAMETERS = [
+  "Follows and actively spreads the School's vision and values",
+  "Conducts documented checks on work quality (at least 1/month)",
+  "Develops termly/annual plans and submits them timely",
+  "Checks thoroughly on all relevant documents, duly stamps them and gives feedback",
+  "Chairs meetings professionally (has an agenda, assigns duties, follows up...)",
+  "Highly disciplined",
+  "Corrects objectively and guides well the Department/Class",
+  "Keeps data on the Department (for CT: has up-to-date Individual Learner's profiles)",
+  "Brings innovation and creativity to the Dept/Class",
+  "The Department/Class achieves its set targets",
+  "Prepares reports for the management whenever needed and as per job description",
+  "For CT: the Class is tidy, For HOP/SR: all Panel/Role docs are well kept",
+  "Accomodates and interacts with SNE learners",
+  "For CT: Implements the Character Formation Program, For HOP, SR: enhances cohesion among team members",
+  "Follows the Catholic proposal of the school, makes the Class/Department follow it",
+  "No disciplinary issues",
+  "Meets deadlines",
+  "Reports on time",
+  "No unjustified absence",
+  "Cooperates with other First Line Leaders positively",
+  "Knows each learner holistically (\"tell me about the learners in your Dept/Class\")",
+  "Ensures plans are implemented and completed",
+  "Follows School's Policies (Conduct, Dress, phones, etc)",
+  "Follows his/her Job Description (3 questions to be well answered on JD)",
+  "Follows the School's Intermediate and Senior Leadership"
+];
+
+export const INTERMEDIATE_LEADERSHIP_EVALUATION_PARAMETERS = [
+  "Follows and actively spreads the School's vision and values",
+  "Conducts and documented checks on work quality (at least 1/month)",
+  "Develops termly/annual plans and submits them timely",
+  "Checks thoroughly on all relevant documents and duly stamps them",
+  "Chairs meetings professionally (has an agenda, assigns duties, follows up...)",
+  "Highly disciplined",
+  "Corrects objectively and guides well the Appraisees",
+  "No disciplinary issues",
+  "Ensures timelines are kept",
+  "Manages By Walking Around",
+  "Prepares reports for the managements whenever needed and as per job description",
+  "The workstation is clean and tidy",
+  "Fosters holistic excellence in the field of competence",
+  "No disciplinary issues",
+  "Meets deadlines",
+  "Reports on time",
+  "No unjustified absence",
+  "Guides well the First Line Leaders, by leading from the front",
+  "Collaborates effectively with Intermediate Leaders",
+  "Knows and applies well the appraisal process of UCS",
+  "Follows the Catholic proposal of the school and makes Staff follow it.",
+  "Knows and follows School's Policies (Conduct, Dress, phones, etc) (3 questions)",
+  "Knows and abides by the Job Description (3 questions)",
+  "Ensures plans are implemented and completed",
+  "Follows the School's Senior Leadership"
+];
+
 export const SENIOR_LEADERSHIP_EVALUATION_PARAMETERS = [
   "Sacrifices time and energy for the betterment of the School",
   "Conducts documented checks on work quality (at least 1/month)",

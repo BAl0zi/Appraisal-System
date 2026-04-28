@@ -8,7 +8,7 @@ import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, P
 import SignatureInput from '../SignatureInput';
 import { getRoleCategory, UserRole } from '@/constants/roles';
 import { LESSON_OBSERVATION_PARAMETERS, WORK_OBSERVATION_PARAMETERS, PROFESSIONAL_DOCUMENTS } from '@/constants/observation-criteria';
-import { TEACHING_EVALUATION_PARAMETERS, NON_TEACHING_EVALUATION_PARAMETERS, SENIOR_LEADERSHIP_EVALUATION_PARAMETERS } from '@/constants/evaluation-criteria';
+import { TEACHING_EVALUATION_PARAMETERS, NON_TEACHING_EVALUATION_PARAMETERS, SENIOR_LEADERSHIP_EVALUATION_PARAMETERS, INTERMEDIATE_LEADERSHIP_EVALUATION_PARAMETERS, FIRSTLINE_LEADERSHIP_EVALUATION_PARAMETERS } from '@/constants/evaluation-criteria';
 
 interface Target {
   id: number;
@@ -132,12 +132,16 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   const showTargets = roleCategory !== 'NON_TEACHING';
   const isTeachingStaff = roleCategory === 'TEACHING';
   const isSeniorLeadership = roleCategory === 'SENIOR_LEADERSHIP' || roleCategory === 'DIRECTOR';
+  const isIntermediateLeadership = roleCategory === 'INTERMEDIATE_LEADERSHIP';
+  const isFirstlineLeadership = roleCategory === 'FIRSTLINE_LEADERSHIP';
   const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING';
 
   // Helper to get correct evaluation parameters
   const getEvaluationParameters = () => {
     if (isTeachingStaff) return TEACHING_EVALUATION_PARAMETERS;
     if (isSeniorLeadership) return SENIOR_LEADERSHIP_EVALUATION_PARAMETERS;
+    if (isIntermediateLeadership) return INTERMEDIATE_LEADERSHIP_EVALUATION_PARAMETERS;
+    if (isFirstlineLeadership) return FIRSTLINE_LEADERSHIP_EVALUATION_PARAMETERS;
     return NON_TEACHING_EVALUATION_PARAMETERS;
   };
 
