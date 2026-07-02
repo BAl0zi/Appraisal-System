@@ -1,17 +1,39 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+let adminClient: SupabaseClient | null = null
 
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error('Missing Supabase URL or Service Role Key')
+export function getSupabaseAdmin() {
+  if (adminClient) {
+    return adminClient
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Missing Supabase URL or Service Role Key')
+  }
+
+  // Note: This client should ONLY be used in server-side contexts (API routes, Server Actions)
+  // NEVER use this on the client side as it exposes your service role key.
+  adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+
+  return adminClient
 }
 
-// Note: This client should ONLY be used in server-side contexts (API routes, Server Actions)
-// NEVER use this on the client side as it exposes your service role key.
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_target, property, receiver) {
+    const value = Reflect.get(getSupabaseAdmin(), property, receiver)
+
+    if (typeof value === 'function') {
+      return value.bind(getSupabaseAdmin())
+    }
+
+    return value
   }
 })
