@@ -49,6 +49,7 @@ type AppraisalView = 'MENU' | 'TARGETS' | 'OBSERVATION' | 'EVALUATION' | 'SCORES
 export default function AppraisalForm({ appraiserId, appraiser, appraisee, existingAppraisal, initialTerm, initialYear, appraisalRole, initialView, hideBack }: AppraisalFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [currentAppraisalId, setCurrentAppraisalId] = useState<string | undefined>(existingAppraisal?.id);
   const [isPrintingFullReport, setIsPrintingFullReport] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [currentView, setCurrentView] = useState<AppraisalView>((initialView as AppraisalView) || 'MENU');
@@ -419,8 +420,8 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
     const payload = new FormData();
     payload.append('appraiserId', appraiserId);
     payload.append('appraiseeId', appraisee.id);
-    if (existingAppraisal?.id) {
-      payload.append('appraisalId', existingAppraisal.id);
+    if (currentAppraisalId) {
+      payload.append('appraisalId', currentAppraisalId);
     }
     // Keep existing status
     payload.append('status', existingAppraisal?.status || 'DRAFT'); 
@@ -431,6 +432,9 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
     const result = await saveAppraisal(payload);
 
     if (result.success) {
+        if (result.appraisalId) {
+          setCurrentAppraisalId(result.appraisalId);
+        }
         setMessage({ type: 'success', text: `${obsNum === 1 ? 'First' : 'Second'} Observation marked as completed.` });
         setObservationViewMode('SELECTION');
     } else {
@@ -611,8 +615,8 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
     const payload = new FormData();
     payload.append('appraiserId', appraiserId);
     payload.append('appraiseeId', appraisee.id);
-    if (existingAppraisal?.id) {
-      payload.append('appraisalId', existingAppraisal.id);
+    if (currentAppraisalId) {
+      payload.append('appraisalId', currentAppraisalId);
     }
     payload.append('status', status);
     payload.append('role', effectiveRole);
@@ -622,6 +626,9 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
     const result = await saveAppraisal(payload);
 
     if (result.success) {
+      if (result.appraisalId) {
+        setCurrentAppraisalId(result.appraisalId);
+      }
       const successText = status === 'TARGETS_SET'
         ? 'Targets set successfully'
         : status === 'TARGETS_SUBMITTED' 

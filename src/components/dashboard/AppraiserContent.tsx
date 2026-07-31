@@ -186,6 +186,18 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
     );
   };
 
+  const getAppraisalHref = (appraiseeId: string, appraisal: any, fallbackRole: string) => {
+    if (appraisal?.id) {
+      return `/dashboard/appraisal/${appraiseeId}?appraisalId=${appraisal.id}`;
+    }
+
+    const term = appraisal?.appraisal_data?.term || appraisal?.term || viewTerm;
+    const year = appraisal?.appraisal_data?.year || appraisal?.year || viewYear;
+    const roleParam = fallbackRole ? `&role=${encodeURIComponent(fallbackRole)}` : '';
+
+    return `/dashboard/appraisal/${appraiseeId}?term=${encodeURIComponent(term)}&year=${encodeURIComponent(year)}${roleParam}`;
+  };
+
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
@@ -355,8 +367,6 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                   const appraisal = getAppraisalForUser(appraisee.id, appraisee.assignedRole);
                   const score = appraisal?.overall_score || 0;
                   const status = appraisal?.status || 'NOT STARTED';
-                  const roleParam = appraisee.assignedRole ? `&role=${encodeURIComponent(appraisee.assignedRole)}` : '';
-                  
                   return (
                     <div key={`${appraisee.id}-${appraisee.assignedRole}`} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group">
                       <div className="flex items-center justify-between mb-6">
@@ -401,7 +411,7 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                           if (status === 'NOT STARTED') {
                             handleStartAppraisalClick(appraisee.id, appraisee.assignedRole);
                           } else {
-                            router.push(`/dashboard/appraisal/${appraisee.id}?term=${appraisal?.term || 'Term 1'}&year=${appraisal?.year || new Date().getFullYear()}${roleParam}`);
+                            router.push(getAppraisalHref(appraisee.id, appraisal, appraisee.assignedRole));
                           }
                         }}
                         className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center
@@ -462,8 +472,6 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                       const appraisal = getAppraisalForUser(appraisee.id, appraisee.assignedRole);
                       const status = appraisal?.status || 'NOT STARTED';
                       const isDeletionRequested = appraisal?.deletion_requested;
-                      const roleParam = appraisee.assignedRole ? `&role=${encodeURIComponent(appraisee.assignedRole)}` : '';
-                      
                       return (
                         <tr key={`${appraisee.id}-${appraisee.assignedRole}`} className="hover:bg-gray-50/50 transition-colors">
                           <td className="px-8 py-5 whitespace-nowrap">
@@ -510,7 +518,7 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                                 </button>
                               ) : (
                                 <button 
-                                  onClick={() => router.push(`/dashboard/appraisal/${appraisee.id}?term=${appraisal?.term || 'Term 1'}&year=${appraisal?.year || new Date().getFullYear()}${roleParam}`)}
+                                  onClick={() => router.push(getAppraisalHref(appraisee.id, appraisal, appraisee.assignedRole))}
                                   className="inline-flex items-center px-3 py-1.5 border border-gray-200 text-xs font-bold rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm"
                                 >
                                   {status === 'COMPLETED' || status === 'SIGNED' ? 'View Report' : 'Continue'}

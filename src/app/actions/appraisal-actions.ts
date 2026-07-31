@@ -57,6 +57,7 @@ export async function saveAppraisal(formData: FormData) {
   }
 
   let result;
+  let savedAppraisalId = existing?.id;
   
   if (existing) {
     // Update
@@ -69,7 +70,9 @@ export async function saveAppraisal(formData: FormData) {
         updated_at: new Date().toISOString(),
         role: role || null // Ensure role is consistent
       })
-      .eq('id', existing.id);
+      .eq('id', existing.id)
+      .select('id')
+      .single();
   } else {
     // Insert
     result = await supabaseAdmin
@@ -81,15 +84,19 @@ export async function saveAppraisal(formData: FormData) {
         appraisal_data: appraisalData,
         overall_score: parseFloat(overallScore),
         role: role || null
-      });
+      })
+      .select('id')
+      .single();
   }
 
   if (result.error) {
     return { success: false, error: result.error.message };
   }
 
+  savedAppraisalId = result.data?.id || savedAppraisalId;
+
   revalidatePath('/dashboard');
-  return { success: true };
+  return { success: true, appraisalId: savedAppraisalId };
 }
 
 export async function requestDeletion(appraisalId: string, reason: string) {
