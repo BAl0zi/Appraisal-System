@@ -5,8 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function assignAppraiser(appraiseeId: string, appraiserId: string, role?: string) {
   try {
-    // Robust approach: Delete any existing assignment for this appraisee/role combination first
-    // This handles cases where multiple rows might exist due to bad data or PK constraints
+    // Clear only the current assignment row for this appraisee/role. Appraisal records stay untouched.
     let deleteQuery = supabaseAdmin
       .from('appraiser_assignments')
       .delete()
@@ -21,7 +20,6 @@ export async function assignAppraiser(appraiseeId: string, appraiserId: string, 
     const { error: deleteError } = await deleteQuery;
     if (deleteError) throw new Error(`Failed to clear existing assignment: ${deleteError.message}`);
 
-    // Create new assignment
     const { error: insertError } = await supabaseAdmin
       .from('appraiser_assignments')
       .insert({

@@ -1241,7 +1241,6 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                             // Find assigned appraiser
                             const appraiserId = assignments[user.id]?.[role];
                             const appraiser = users.find(u => u.id === appraiserId);
-                            const appraiserName = appraiser?.full_name || 'Unassigned';
                             
                             return (
                               <tr key={`${user.id}-${role}`} className="hover:bg-gray-50/50 transition-colors cursor-default">
