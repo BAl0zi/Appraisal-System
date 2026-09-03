@@ -18,6 +18,6 @@ export const LEADERSHIP_SAMPLE_DATA = [
 
   // Firstline Leadership
   { full_name: 'Peter Panel', role: 'HEAD OF PANELS' as UserRole, email: 'panel@school.com', jobCategory: 'FIRSTLINE_LEADERSHIP' },
-  { full_name: 'Clara Class', role: 'CLASS TEACHERS' as UserRole, email: 'class@school.com', jobCategory: 'FIRSTLINE_LEADERSHIP' },
+  { full_name: 'Clara Class', role: 'CLASS TEACHERS' as UserRole, email: 'class@school.com', jobCategory: 'TEACHING' },
   { full_name: 'Sam Special', role: 'SPECIAL ROLES' as UserRole, email: 'special@school.com', jobCategory: 'FIRSTLINE_LEADERSHIP' },
 ];

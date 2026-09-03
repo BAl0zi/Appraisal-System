@@ -72,6 +72,39 @@ export async function createUser(prevState: any, formData: FormData) {
   }
 }
 
+export async function getAllUsers() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return { success: true, data }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function searchUsers(term: string) {
+  const trimmed = term.trim()
+  if (!trimmed) return { success: true, data: [] }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('id, full_name, email, role, job_category')
+      .or(`full_name.ilike.%${trimmed}%,email.ilike.%${trimmed}%,role.ilike.%${trimmed}%`)
+      .order('full_name', { ascending: true })
+      .limit(50)
+
+    if (error) throw error
+    return { success: true, data }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
 export async function deleteUser(userId: string) {
   try {
     // 1. Remove or reassign any dependent rows in other tables to avoid foreign key constraint errors.

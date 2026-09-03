@@ -68,7 +68,7 @@ function DashboardContent() {
     return <DirectorDashboard currentUser={currentUser} initialTab={initialTab || undefined} />;
   }
 
-  return <AppraiserDashboard currentUser={currentUser} initialTab={initialTab || undefined} />;
+  return <AppraiserDashboard currentUser={currentUser} initialTab={initialTab || undefined} role={userData.role} />;
 }
 
 export default function Dashboard() {
