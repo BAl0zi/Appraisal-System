@@ -35,9 +35,9 @@ const APPRAISAL_HIERARCHY: Partial<Record<UserRole, UserRole[]>> = {
   'DRIVERS SUPERVISOR': ['SCHOOL MANAGER'],
   'CLEANERS SUPERVISOR': ['SCHOOL MANAGER'],
   'HEAD OF PANELS': ['HEAD TEACHER', 'SECTION HEAD UPPER PRIMARY', 'SECTION HEAD JUNIOR SCHOOL', 'SECTION HEAD LOWER PRIMARY', 'CURRICULUM COORDINATOR'],
-  'CLASS TEACHERS': ['HEAD TEACHER', 'SECTION HEAD UPPER PRIMARY', 'SECTION HEAD JUNIOR SCHOOL', 'SECTION HEAD LOWER PRIMARY', 'CURRICULUM COORDINATOR', 'SPECIAL NEEDS COORDINATOR'],
+  'CLASS TEACHERS': ['HEAD TEACHER', 'SECTION HEAD UPPER PRIMARY', 'SECTION HEAD JUNIOR SCHOOL', 'SECTION HEAD LOWER PRIMARY', 'CURRICULUM COORDINATOR', 'SPECIAL NEEDS COORDINATOR', 'COCURRICULAR HEAD'],
   'SPECIAL ROLES': ['HEAD TEACHER', 'SECTION HEAD UPPER PRIMARY', 'SECTION HEAD JUNIOR SCHOOL', 'SECTION HEAD LOWER PRIMARY', 'CURRICULUM COORDINATOR', 'SPECIAL NEEDS COORDINATOR'],
-  'SPECIAL NEEDS TEACHER': ['HEAD TEACHER', 'SPECIAL NEEDS COORDINATOR', 'SECTION HEAD UPPER PRIMARY', 'SECTION HEAD JUNIOR SCHOOL', 'SECTION HEAD LOWER PRIMARY', 'CURRICULUM COORDINATOR'],
+  'SPECIAL NEEDS TEACHER': ['HEAD TEACHER', 'SPECIAL NEEDS COORDINATOR', 'SECTION HEAD UPPER PRIMARY', 'SECTION HEAD JUNIOR SCHOOL', 'SECTION HEAD LOWER PRIMARY', 'CURRICULUM COORDINATOR', 'COCURRICULAR HEAD'],
   'LAB TECHNICIAN': ['HEAD TEACHER'],
   'LIBRARIAN': ['SCHOOL MANAGER'],
   'SECRETARY': ['SCHOOL MANAGER'],
@@ -84,7 +84,7 @@ export default function AssignmentManager({ users, assignments, onUpdate }: Assi
   const appraisees = users.filter(u => u.role !== 'SUPER ADMIN');
   const potentialAppraisers = users;
 
-  // Flatten users into assignable items (User + Role)
+  // Flatten users into assignable items (User + Role), sorted alphabetically by name
   const assignableItems = appraisees.flatMap(user => {
     const userRoles = user.roles && user.roles.length > 0 ? user.roles : [user.role];
     return userRoles.map(role => ({
@@ -92,7 +92,7 @@ export default function AssignmentManager({ users, assignments, onUpdate }: Assi
       role,
       key: `${user.id}-${role}`
     }));
-  });
+  }).sort((a, b) => a.user.full_name.localeCompare(b.user.full_name));
 
   return (
     <div className="space-y-6">
