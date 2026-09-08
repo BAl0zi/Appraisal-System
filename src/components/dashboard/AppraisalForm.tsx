@@ -7,7 +7,7 @@ import { saveAppraisal, deleteAppraisal } from '@/app/actions/appraisal-actions'
 import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, Printer, Download, CheckCircle, ClipboardList, Loader2 } from 'lucide-react';
 import SignatureInput from '../SignatureInput';
 import { getRoleCategory, UserRole } from '@/constants/roles';
-import { LESSON_OBSERVATION_PARAMETERS, WORK_OBSERVATION_PARAMETERS, PROFESSIONAL_DOCUMENTS } from '@/constants/observation-criteria';
+import { LESSON_OBSERVATION_PARAMETERS, WORK_OBSERVATION_PARAMETERS, COACH_OBSERVATION_PARAMETERS, PROFESSIONAL_DOCUMENTS } from '@/constants/observation-criteria';
 import { TEACHING_EVALUATION_PARAMETERS, NON_TEACHING_EVALUATION_PARAMETERS, SENIOR_LEADERSHIP_EVALUATION_PARAMETERS, INTERMEDIATE_LEADERSHIP_EVALUATION_PARAMETERS, FIRSTLINE_LEADERSHIP_EVALUATION_PARAMETERS } from '@/constants/evaluation-criteria';
 
 interface Target {
@@ -136,6 +136,9 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   const isIntermediateLeadership = roleCategory === 'INTERMEDIATE_LEADERSHIP';
   const isFirstlineLeadership = roleCategory === 'FIRSTLINE_LEADERSHIP';
   const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING';
+  const isCoach = effectiveRole === 'COACH';
+  // Coaches only ever fill out a single observation, not First/Second rounds
+  const showSecondObservation = showObservations && !isCoach;
 
   // Helper to get correct evaluation parameters
   const getEvaluationParameters = () => {
@@ -146,8 +149,14 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
     return NON_TEACHING_EVALUATION_PARAMETERS;
   };
 
+  // Helper to get correct observation parameters
+  const getObservationParameters = () => {
+    if (isCoach) return COACH_OBSERVATION_PARAMETERS;
+    return isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+  };
+
   const evaluationParams = getEvaluationParameters();
-  const observationParams = isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+  const observationParams = getObservationParameters();
 
   // Target Calculations
   const calculateTargetStats = () => {
@@ -360,7 +369,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
     setLoading(true);
     setMessage(null);
 
-    const params = isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+    const params = getObservationParameters();
     const obsKey = obsNum === 1 ? 'observation1' : 'observation2';
     const currentObs = formData[obsKey];
     
@@ -525,7 +534,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
 
     // Validation: Check Observation Parameters (Required for Saving in Observation View or Completing)
     if ((status === 'OBSERVATION_SUBMITTED' || status === 'COMPLETED') && showObservations) {
-      const params = isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+      const params = getObservationParameters();
       
       // Validate Observation 1 (Mandatory)
       const ratings1 = formData.observation1?.ratings || {};
@@ -721,13 +730,13 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
             <div className="p-4 bg-purple-50 rounded-full mb-4 group-hover:bg-purple-100">
               <Eye className="h-8 w-8 text-purple-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">{isTeachingStaff ? 'First Lesson Observation' : 'First Work Observation'}</h3>
-            <p className="text-sm text-gray-500 mt-2">Record first observation and feedback.</p>
+            <h3 className="text-lg font-semibold text-gray-900">{isCoach ? 'Coach Observation' : isTeachingStaff ? 'First Lesson Observation' : 'First Work Observation'}</h3>
+            <p className="text-sm text-gray-500 mt-2">{isCoach ? 'Record observation and feedback.' : 'Record first observation and feedback.'}</p>
           </button>
           )}
 
-          {/* 3. Second Lesson/Work Observation */}
-          {showObservations && (
+          {/* 3. Second Lesson/Work Observation (not applicable to Coaches, who only have one observation) */}
+          {showSecondObservation && (
           <button
             onClick={() => {
               setActiveObservation('SECOND');
@@ -936,16 +945,16 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
              return (
              <div key={obsKey} className="break-inside-avoid mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-                  {isTeachingStaff ? `B${obsIndex+1}. LESSON OBSERVATION (${obsIndex === 0 ? 'FIRST' : 'SECOND'})` : `C${obsIndex+1}. WORK OBSERVATION (${obsIndex === 0 ? 'FIRST' : 'SECOND'})`}
+                  {isCoach ? 'B. COACH OBSERVATION' : isTeachingStaff ? `B${obsIndex+1}. LESSON OBSERVATION (${obsIndex === 0 ? 'FIRST' : 'SECOND'})` : `C${obsIndex+1}. WORK OBSERVATION (${obsIndex === 0 ? 'FIRST' : 'SECOND'})`}
                 </h3>
 
                 {/* Observation Details Header */}
                 <div className="mb-4 grid grid-cols-2 gap-4 text-sm border p-4 rounded bg-gray-50">
                   <div className="col-span-2 flex space-x-6 border-b pb-2 mb-2">
                      <span className="font-bold">Observation Type:</span>
-                     <span className="font-bold uppercase">{obsIndex === 0 ? 'FIRST' : 'SECOND'} OBSERVATION</span>
+                     <span className="font-bold uppercase">{isCoach ? 'COACH OBSERVATION' : `${obsIndex === 0 ? 'FIRST' : 'SECOND'} OBSERVATION`}</span>
                   </div>
-                  
+
                   <div><span className="font-bold">Appraisee:</span> {appraisee.full_name}</div>
                   <div><span className="font-bold">Appraiser:</span> {existingAppraisal?.appraiser_name || appraiser?.full_name || '_________________'}</div>
                   
@@ -972,7 +981,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {(isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS).map((param, index) => (
+                    {getObservationParameters().map((param, index) => (
                       <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                         <td className="px-4 py-2 text-sm text-gray-900 border-r">{index + 1}. {param}</td>
                         <td className="px-4 py-2 text-center text-sm text-gray-900 font-medium">
@@ -1044,7 +1053,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
               <h4 className="text-md font-bold text-gray-800 mb-2">Observation Comments</h4>
               <div className="space-y-4">
                   <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[60px]">
-                    <p className="text-xs font-bold text-gray-500 uppercase mb-1">First Observation</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase mb-1">{isCoach ? 'Observation' : 'First Observation'}</p>
                     {formData.observation1?.comments || 'No comments provided.'}
                   </div>
                   {(formData.observation2?.comments || (formData.observation2?.ratings && Object.keys(formData.observation2.ratings).length > 0)) && (
@@ -1092,7 +1101,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                       <>
                         <tr>
                           <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
-                            {isTeachingStaff ? 'LESSON OBSERVATION (1st)' : 'WORK OBSERVATION (1st)'}
+                            {isCoach ? 'COACH OBSERVATION' : isTeachingStaff ? 'LESSON OBSERVATION (1st)' : 'WORK OBSERVATION (1st)'}
                           </td>
                           <td className="px-6 py-4 text-center text-sm text-gray-900">{observationStats.score1}</td>
                         </tr>
@@ -1491,16 +1500,16 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
           <div className="bg-white shadow sm:rounded-lg overflow-hidden">
             <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
-                {isTeachingStaff ? 'B. LESSON OBSERVATION FORM' : 'C. WORK OBSERVATION FORM'}
+                {isCoach ? 'B. COACH OBSERVATION FORM' : isTeachingStaff ? 'B. LESSON OBSERVATION FORM' : 'C. WORK OBSERVATION FORM'}
               </h3>
               <p className="mt-1 text-sm text-gray-500">
-                {isTeachingStaff ? 'Tick one box only for each Parameter.' : 'Tick one box only for each Parameter.'}
+                Tick one box only for each Parameter.
               </p>
             </div>
-            
+
             <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                 <div className="text-sm font-medium text-gray-900">
-                    {activeObservation === 'FIRST' ? 'First Observation' : 'Second Observation'}
+                    {isCoach ? 'Observation' : activeObservation === 'FIRST' ? 'First Observation' : 'Second Observation'}
                 </div>
                 <button
                   onClick={() => setCurrentView('MENU')}
@@ -1708,7 +1717,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {(isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS).map((param, index) => (
+                    {getObservationParameters().map((param, index) => (
                       <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           {index + 1}. {param}
@@ -2094,7 +2103,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                             <>
                               <tr>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-300 print:px-2 print:py-1">
-                                  {isTeachingStaff ? 'LESSON OBSERVATION' : 'WORK OBSERVATION'}
+                                  {isCoach ? 'COACH OBSERVATION' : isTeachingStaff ? 'LESSON OBSERVATION' : 'WORK OBSERVATION'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300 print:px-2 print:py-1">{termNum === 1 ? observationStats.totalScore : '-'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 border-r border-gray-300 print:px-2 print:py-1">{termNum === 2 ? observationStats.totalScore : '-'}</td>

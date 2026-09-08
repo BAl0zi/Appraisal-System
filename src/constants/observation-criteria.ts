@@ -26,6 +26,34 @@ export const LESSON_OBSERVATION_PARAMETERS = [
   "Creates a friendly and warm learning atmosphere"
 ];
 
+export const COACH_OBSERVATION_PARAMETERS = [
+  "Review of the previous lesson",
+  "The objective of the lesson is well stated",
+  "Covers the lesson within the stipulated time (starts and ends on time)",
+  "Appropriate warm-up activities are conducted",
+  "Skills are demonstrated correctly",
+  "Instructions are clear and age-appropriate",
+  "Coach provides adequate practice time",
+  "Activities are appropriate to learner ability",
+  "Coach effectively manages the group",
+  "Coach provides individual attention where necessary",
+  "Coach uses appropriate teaching/coaching methods",
+  "Coach gives constructive feedback",
+  "Coach motivates and encourages learners",
+  "Learners are actively engaged throughout the lesson",
+  "Coach monitors learner progress during the session",
+  "Lesson concludes with appropriate cool-down/review",
+  "Conducts appropriate safety briefing",
+  "Maintains continuous supervision of learners",
+  "Maintains appropriate coach-to-learner supervision",
+  "Checks that learners follow pool rules",
+  "Identifies and manages potential hazards",
+  "Demonstrates knowledge of emergency procedures",
+  "Maintains appropriate positioning around the pool",
+  "Ensures learners enter and exit the pool safely",
+  "Responds appropriately to unsafe behaviour"
+];
+
 export const PROFESSIONAL_DOCUMENTS = [
   "Class diary",
   "Lesson Plans",
