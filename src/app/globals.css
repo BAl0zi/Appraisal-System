@@ -69,8 +69,8 @@ body {
   .page-break { page-break-after: always; break-after: page; }
   .avoid-break { page-break-inside: avoid; break-inside: avoid; }
 
-  /* Tables: keep rows together and repeat headers */
-  table { page-break-inside: avoid; break-inside: avoid; }
+  /* Tables: let large tables span pages, but keep each row intact and repeat headers */
+  tr { page-break-inside: avoid; break-inside: avoid; }
   thead { display: table-header-group; }
   tfoot { display: table-footer-group; }
 

@@ -4,6 +4,28 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createClient } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
 
+export async function getMyAppraisalsAsAppraisee() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('appraisals')
+    .select(`*, appraiser:users!appraiser_id(full_name, role)`)
+    .eq('appraisee_id', user.id)
+    .in('status', ['COMPLETED', 'SIGNED'])
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data };
+}
+
 export async function saveAppraisal(formData: FormData) {
   // Verify authentication
   const supabase = await createClient();

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Users, FileText, CheckCircle, Clock, Play, LogOut, Trash2, History, Loader2, Key, AlertTriangle, Check } from 'lucide-react';
+import { Users, FileText, CheckCircle, Clock, Play, LogOut, Trash2, History, Loader2, Key, AlertTriangle, Check, Download } from 'lucide-react';
 import { deleteAppraisal } from '@/app/actions/appraisal-actions';
 
 interface AppraiserContentProps {
@@ -59,7 +59,14 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
   const [isTermModalOpen, setIsTermModalOpen] = useState(false);
   const [selectedAppraiseeIdForTerm, setSelectedAppraiseeIdForTerm] = useState<string | null>(null);
   const [selectedAppraiseeRoleForTerm, setSelectedAppraiseeRoleForTerm] = useState<string | null>(null);
-  
+
+  // Tracks in-flight navigation so buttons can show a loading state while the target page loads
+  const [navigatingHref, setNavigatingHref] = useState<string | null>(null);
+  const navigateTo = (href: string) => {
+    setNavigatingHref(href);
+    router.push(href);
+  };
+
   const [selectedTerm, setSelectedTerm] = useState(() => {
     const month = new Date().getMonth();
     if (month === 11) return 'Term 1';
@@ -92,7 +99,7 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
   const handleProceedToAppraisal = () => {
     if (selectedAppraiseeIdForTerm && selectedTerm && selectedYear) {
       const roleParam = selectedAppraiseeRoleForTerm ? `&role=${encodeURIComponent(selectedAppraiseeRoleForTerm)}` : '';
-      router.push(`/dashboard/appraisal/${selectedAppraiseeIdForTerm}?term=${selectedTerm}&year=${selectedYear}${roleParam}`);
+      navigateTo(`/dashboard/appraisal/${selectedAppraiseeIdForTerm}?term=${selectedTerm}&year=${selectedYear}${roleParam}`);
       setIsTermModalOpen(false);
     }
   };
@@ -141,10 +148,10 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
         console.error('Error fetching assignments:', error);
       }
 
-      const appraiseeList = assignments?.map((a: any) => ({
+      const appraiseeList = (assignments?.map((a: any) => ({
         ...a.appraisee,
         assignedRole: a.role || a.appraisee.role // Use assigned role or fallback to user's primary role
-      })) || [];
+      })) || []).sort((a, b) => a.full_name.localeCompare(b.full_name));
       setAppraisees(appraiseeList);
 
       // Fetch existing appraisals
@@ -406,28 +413,40 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                         </div>
                       </div>
                       
-                      <button
-                        onClick={() => {
-                          if (status === 'NOT STARTED') {
-                            handleStartAppraisalClick(appraisee.id, appraisee.assignedRole);
-                          } else {
-                            router.push(getAppraisalHref(appraisee.id, appraisal, appraisee.assignedRole));
-                          }
-                        }}
-                        className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center
-                          ${status === 'NOT STARTED' 
-                            ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200' 
-                            : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100'}`}
-                      >
-                        {status === 'NOT STARTED' ? (
-                            <>
-                                <Play className="h-4 w-4 mr-2 fill-current" />
-                                Start Appraisal
-                            </>
-                        ) : (
-                            <>View Details</>
-                        )}
-                      </button>
+                      {(() => {
+                        const continueHref = getAppraisalHref(appraisee.id, appraisal, appraisee.assignedRole);
+                        const isThisNavigating = navigatingHref === continueHref;
+                        return (
+                          <button
+                            onClick={() => {
+                              if (status === 'NOT STARTED') {
+                                handleStartAppraisalClick(appraisee.id, appraisee.assignedRole);
+                              } else {
+                                navigateTo(continueHref);
+                              }
+                            }}
+                            disabled={!!navigatingHref}
+                            className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed
+                              ${status === 'NOT STARTED'
+                                ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200'
+                                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100'}`}
+                          >
+                            {isThisNavigating ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Loading...
+                                </>
+                            ) : status === 'NOT STARTED' ? (
+                                <>
+                                    <Play className="h-4 w-4 mr-2 fill-current" />
+                                    Start Appraisal
+                                </>
+                            ) : (
+                                <>View Details</>
+                            )}
+                          </button>
+                        );
+                      })()}
                     </div>
                   );
                 })}
@@ -444,6 +463,14 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                   <h3 className="text-lg font-bold text-gray-900">Assigned Appraisals</h3>
                   <p className="text-sm text-gray-500 mt-1">Manage and track your assigned staff appraisals.</p>
                 </div>
+                <a
+                  href={`/print/scoresheet/bulk/${currentUser.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm shrink-0"
+                >
+                  <Download className="h-4 w-4 mr-2" /> Download All (PDF)
+                </a>
             </div>
 
             <div className="overflow-x-auto">
@@ -510,20 +537,28 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                           <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end space-x-3 items-center">
                               {status === 'NOT STARTED' ? (
-                                <button 
+                                <button
                                   onClick={() => handleStartAppraisalClick(appraisee.id, appraisee.assignedRole)}
-                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all"
+                                  disabled={!!navigatingHref}
+                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                   <Play className="h-3 w-3 mr-1.5 fill-current" /> Start
                                 </button>
-                              ) : (
-                                <button 
-                                  onClick={() => router.push(getAppraisalHref(appraisee.id, appraisal, appraisee.assignedRole))}
-                                  className="inline-flex items-center px-3 py-1.5 border border-gray-200 text-xs font-bold rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm"
-                                >
-                                  {status === 'COMPLETED' || status === 'SIGNED' ? 'View Report' : 'Continue'}
-                                </button>
-                              )}
+                              ) : (() => {
+                                const rowHref = getAppraisalHref(appraisee.id, appraisal, appraisee.assignedRole);
+                                const isThisNavigating = navigatingHref === rowHref;
+                                return (
+                                  <button
+                                    onClick={() => navigateTo(rowHref)}
+                                    disabled={!!navigatingHref}
+                                    className="inline-flex items-center px-3 py-1.5 border border-gray-200 text-xs font-bold rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                    {isThisNavigating ? (
+                                      <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> Loading...</>
+                                    ) : status === 'COMPLETED' || status === 'SIGNED' ? 'View Report' : 'Continue'}
+                                  </button>
+                                );
+                              })()}
                               
                               <button
                                 onClick={() => handleViewHistory(appraisee.id, appraisee.full_name)}
@@ -667,10 +702,11 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                         <tr key={appraisal.id}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button
-                              onClick={() => router.push(`/dashboard/appraisal/${appraisal.appraisee_id}?appraisalId=${appraisal.id}`)}
-                              className="text-blue-600 hover:text-blue-900 hover:underline"
+                              onClick={() => navigateTo(`/dashboard/appraisal/${appraisal.appraisee_id}?appraisalId=${appraisal.id}`)}
+                              disabled={!!navigatingHref}
+                              className="text-blue-600 hover:text-blue-900 hover:underline disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                              {appraisal.appraisal_data?.term} {appraisal.appraisal_data?.year}
+                              {navigatingHref === `/dashboard/appraisal/${appraisal.appraisee_id}?appraisalId=${appraisal.id}` ? 'Loading...' : `${appraisal.appraisal_data?.term} ${appraisal.appraisal_data?.year}`}
                             </button>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -745,14 +781,21 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
                 <button
                   type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  disabled={!!navigatingHref}
+                  className="w-full inline-flex items-center justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={handleProceedToAppraisal}
                 >
-                  Proceed
+                  {navigatingHref ? (
+                    <>
+                      <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                      Loading...
+                    </>
+                  ) : 'Proceed'}
                 </button>
                 <button
                   type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  disabled={!!navigatingHref}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={() => setIsTermModalOpen(false)}
                 >
                   Cancel

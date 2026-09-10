@@ -134,7 +134,7 @@ export default function DashboardLayout({ children, currentUser, role, customNav
   const navigation = customNavigation || defaultNavigation;
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#0a0a0a] flex font-sans text-gray-900 dark:text-gray-100 transition-colors">
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#0a0a0a] flex font-sans text-gray-900 dark:text-gray-100 transition-colors print:bg-white print:text-black">
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#1A1A1A] text-gray-400 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-0 print:hidden flex flex-col rounded-r-3xl m-0 lg:my-4 lg:ml-4 h-[calc(100vh-2rem)] shadow-2xl`}>
         <div className="flex items-center justify-between h-24 px-8">
@@ -204,7 +204,7 @@ export default function DashboardLayout({ children, currentUser, role, customNav
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-screen bg-[#FDFBF7] dark:bg-[#0a0a0a]">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-screen bg-[#FDFBF7] dark:bg-[#0a0a0a] print:bg-white print:h-auto print:overflow-visible">
         {/* Top Header */}
         <header className="flex items-center justify-between px-8 py-6 print:hidden">
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-gray-500">

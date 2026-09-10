@@ -378,11 +378,12 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
   };
 
   const staffUsers = users;
+  const sortedUsers = [...users].sort((a, b) => a.full_name.localeCompare(b.full_name));
   const categoryCounts = JOB_CATEGORIES.reduce((acc, category) => {
     acc[category] = staffUsers.filter(user => user.job_category === category).length;
     return acc;
   }, {} as Record<string, number>);
-  const uncategorizedStaffUsers = staffUsers.filter(user => !JOB_CATEGORIES.includes(user.job_category as any));
+  const uncategorizedStaffUsers = staffUsers.filter(user => !JOB_CATEGORIES.includes(user.job_category as any)).sort((a, b) => a.full_name.localeCompare(b.full_name));
   const uncategorizedStaffCount = uncategorizedStaffUsers.length;
   const staffRoleOptions = Array.from(
     new Set(
@@ -403,7 +404,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
     const matchesRole = staffRoleFilter === 'ALL' || userRoles.includes(staffRoleFilter as UserRole);
 
     return matchesSearch && matchesCategory && matchesRole;
-  });
+  }).sort((a, b) => a.full_name.localeCompare(b.full_name));
   const selectedStaff = staffUsers.find(user => user.id === selectedStaffId) || filteredStaffUsers[0] || null;
 
   if (loading) {
@@ -866,7 +867,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-50">
-                          {users.map((user) => (
+                          {sortedUsers.map((user) => (
                             <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                               <td className="px-8 py-5 whitespace-nowrap">
                                 <div className="flex items-center">

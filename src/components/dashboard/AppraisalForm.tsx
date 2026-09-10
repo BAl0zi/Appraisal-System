@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { saveAppraisal, deleteAppraisal } from '@/app/actions/appraisal-actions';
-import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, Printer, Download, CheckCircle, ClipboardList, Loader2 } from 'lucide-react';
+import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, Download, CheckCircle, ClipboardList, Loader2 } from 'lucide-react';
 import SignatureInput from '../SignatureInput';
+import AppraisalReportDocument from '@/components/AppraisalReportDocument';
 import { getRoleCategory, UserRole } from '@/constants/roles';
 import { LESSON_OBSERVATION_PARAMETERS, WORK_OBSERVATION_PARAMETERS, COACH_OBSERVATION_PARAMETERS, PROFESSIONAL_DOCUMENTS } from '@/constants/observation-criteria';
 import { TEACHING_EVALUATION_PARAMETERS, NON_TEACHING_EVALUATION_PARAMETERS, SENIOR_LEADERSHIP_EVALUATION_PARAMETERS, INTERMEDIATE_LEADERSHIP_EVALUATION_PARAMETERS, FIRSTLINE_LEADERSHIP_EVALUATION_PARAMETERS } from '@/constants/evaluation-criteria';
@@ -814,12 +814,14 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 print:p-0 print:max-w-none">
-      {/* Header for Sub-views */}
-      <div className="hidden print:block mb-4 text-center">
-        <h1 className="text-xl font-bold text-gray-900 uppercase">Final Scoresheet</h1>
-        <p className="text-sm text-gray-600">{appraisee.full_name} - {appraisee.role}</p>
-        <p className="text-xs text-gray-500">{formData.term} {formData.year}</p>
-      </div>
+      {/* Header for Sub-views (not shown for the full branded report, which has its own header) */}
+      {!isPrintingFullReport && (
+        <div className="hidden print:block mb-4 text-center">
+          <h1 className="text-xl font-bold text-gray-900 uppercase">Final Scoresheet</h1>
+          <p className="text-sm text-gray-600">{appraisee.full_name} - {appraisee.role}</p>
+          <p className="text-xs text-gray-500">{formData.term} {formData.year}</p>
+        </div>
+      )}
 
       <div className="mb-8 flex items-center justify-between print:hidden">
         <div className="flex items-center">
@@ -840,24 +842,14 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
         </div>
         <div className="flex items-center space-x-4">
           {currentView === 'SCORESHEET' && (isCompleted || status === 'COMPLETED' || status === 'SIGNED') && (
-            <>
-              <button
-                onClick={() => window.print()}
-                title="Print or Save as PDF"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                Print / Save PDF
-              </button>
-              <button
-                onClick={handleDownloadFullReport}
-                title="Generate Full Report for Printing or PDF"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Full Report (PDF)
-              </button>
-            </>
+            <button
+              onClick={handleDownloadFullReport}
+              title="Download the full appraisal report as a PDF"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download Appraisal
+            </button>
           )}
           {!isCompleted && (
             <button
@@ -891,291 +883,37 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
 
       {/* FULL REPORT VIEW */}
       {isPrintingFullReport && (
-        <div className="space-y-12">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 uppercase">Staff Appraisal Report</h1>
-            <p className="text-lg text-gray-600 mt-2">{appraisee.full_name} - {appraisee.role}</p>
-            <p className="text-sm text-gray-500">{formData.term} {formData.year}</p>
-          </div>
-
-          {/* Targets Section */}
-          {showTargets && (
-            <div className="break-inside-avoid">
-              <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">A. TARGETS</h3>
-              <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r w-1/4">Area & Description</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r w-1/6">Target</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r w-1/6">Actual</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r w-1/4">Remarks</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-1/12">%</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {(formData.targets || []).map((target: Target) => {
-                     const pct = (parseFloat(target.target) > 0 && !isNaN(parseFloat(target.actual))) 
-                        ? ((parseFloat(target.actual) / parseFloat(target.target)) * 100).toFixed(1) 
-                        : '0.0';
-                     return (
-                      <tr key={target.id}>
-                        <td className="px-4 py-2 text-sm text-gray-900 border-r">
-                          <div className="font-bold">{target.area}</div>
-                          <div className="text-xs text-gray-500 mt-1">{target.description}</div>
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900 border-r">{target.target}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900 border-r">{target.actual}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900 border-r text-xs">{target.actualDescription}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900">{pct}%</td>
-                      </tr>
-                     );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Observation Section */}
-          {showObservations && ['observation1', 'observation2'].map((obsKey, obsIndex) => {
-             const obsData = formData[obsKey];
-             // Only show second observation if it has data (check date or ratings)
-             const hasData = obsData && (obsData.date || Object.keys(obsData.ratings || {}).length > 0);
-             if (obsKey === 'observation2' && !hasData) return null;
-             
-             return (
-             <div key={obsKey} className="break-inside-avoid mb-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-                  {isCoach ? 'B. COACH OBSERVATION' : isTeachingStaff ? `B${obsIndex+1}. LESSON OBSERVATION (${obsIndex === 0 ? 'FIRST' : 'SECOND'})` : `C${obsIndex+1}. WORK OBSERVATION (${obsIndex === 0 ? 'FIRST' : 'SECOND'})`}
-                </h3>
-
-                {/* Observation Details Header */}
-                <div className="mb-4 grid grid-cols-2 gap-4 text-sm border p-4 rounded bg-gray-50">
-                  <div className="col-span-2 flex space-x-6 border-b pb-2 mb-2">
-                     <span className="font-bold">Observation Type:</span>
-                     <span className="font-bold uppercase">{isCoach ? 'COACH OBSERVATION' : `${obsIndex === 0 ? 'FIRST' : 'SECOND'} OBSERVATION`}</span>
-                  </div>
-
-                  <div><span className="font-bold">Appraisee:</span> {appraisee.full_name}</div>
-                  <div><span className="font-bold">Appraiser:</span> {existingAppraisal?.appraiser_name || appraiser?.full_name || '_________________'}</div>
-                  
-                  <div><span className="font-bold">Date:</span> {obsData?.date || '_________________'}</div>
-                  <div><span className="font-bold">Time:</span> {obsData?.time || '_________________'}</div>
-                  
-                  {isTeachingStaff ? (
-                    <>
-                      <div><span className="font-bold">Class/Grade:</span> {obsData?.classGrade || '_________________'}</div>
-                      <div><span className="font-bold">Subject:</span> {obsData?.subject || '_________________'}</div>
-                      <div><span className="font-bold">Topic:</span> {obsData?.topic || '_________________'}</div>
-                      <div><span className="font-bold">Learners Present:</span> {obsData?.learnersPresent || '_________________'}</div>
-                    </>
-                  ) : (
-                    <div className="col-span-2"><span className="font-bold">Work Appraised:</span> {obsData?.workAppraised || '_________________'}</div>
-                  )}
-                </div>
-
-                <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-2/3">Parameter</th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Rating</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {getObservationParameters().map((param, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-4 py-2 text-sm text-gray-900 border-r">{index + 1}. {param}</td>
-                        <td className="px-4 py-2 text-center text-sm text-gray-900 font-medium">
-                          {obsData?.ratings?.[index] || '-'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-             </div>
-             );
-          })}
-
-          {/* Professional Documents (Teaching Staff Only) */}
-          {isTeachingStaff && (
-             <div className="break-inside-avoid">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">PROFESSIONAL DOCUMENTS</h3>
-                <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-2/3">Document</th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {PROFESSIONAL_DOCUMENTS.map((doc, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-4 py-2 text-sm text-gray-900 border-r">{index + 1}. {doc}</td>
-                        <td className="px-4 py-2 text-center text-sm text-gray-900 font-medium capitalize">
-                          {(formData.observation1?.documents?.[index] || 'not_available').replace('_', ' ')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-             </div>
-          )}
-
-          {/* Evaluation Section */}
-          <div className="break-inside-avoid">
-            <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-               D. EMPLOYEE EVALUATION
-            </h3>
-            <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-2/3">Parameter</th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Rating</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {getEvaluationParameters().map((param, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-4 py-2 text-sm text-gray-900 border-r">{index + 1}. {param}</td>
-                    <td className="px-4 py-2 text-center text-sm text-gray-900 font-medium">
-                      {formData.evaluation?.ratings?.[index] || '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Comments Section */}
-          <div className="break-inside-avoid">
-            <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">COMMENTS & REMARKS</h3>
-            
-            <div className="mb-6">
-              <h4 className="text-md font-bold text-gray-800 mb-2">Observation Comments</h4>
-              <div className="space-y-4">
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[60px]">
-                    <p className="text-xs font-bold text-gray-500 uppercase mb-1">{isCoach ? 'Observation' : 'First Observation'}</p>
-                    {formData.observation1?.comments || 'No comments provided.'}
-                  </div>
-                  {(formData.observation2?.comments || (formData.observation2?.ratings && Object.keys(formData.observation2.ratings).length > 0)) && (
-                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[60px]">
-                        <p className="text-xs font-bold text-gray-500 uppercase mb-1">Second Observation</p>
-                        {formData.observation2?.comments || 'No comments provided.'}
-                      </div>
-                  )}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h4 className="text-md font-bold text-gray-800 mb-2">Progress Remarks</h4>
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[80px]">
-                {formData.evaluation?.progressComments?.[0] || 'No remarks provided.'}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h4 className="text-md font-bold text-gray-800 mb-2">Areas for Improvement</h4>
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-md min-h-[80px]">
-                {formData.evaluation?.improvementComments?.[0] || 'No remarks provided.'}
-              </div>
-            </div>
-          </div>
-
-          {/* Scoresheet Section */}
-          <div className="break-inside-avoid">
-             <h3 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">SCORESHEET SUMMARY</h3>
-             <table className="min-w-full divide-y divide-gray-200 border border-gray-300 mb-8">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-300">Component</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase border-r border-gray-300">Score</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {showTargets && (
-                      <tr>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">TARGETS SCORE</td>
-                        <td className="px-6 py-4 text-center text-sm text-gray-900">{targetStats.marks}</td>
-                      </tr>
-                    )}
-                    {showObservations && (
-                      <>
-                        <tr>
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
-                            {isCoach ? 'COACH OBSERVATION' : isTeachingStaff ? 'LESSON OBSERVATION (1st)' : 'WORK OBSERVATION (1st)'}
-                          </td>
-                          <td className="px-6 py-4 text-center text-sm text-gray-900">{observationStats.score1}</td>
-                        </tr>
-                        {observationStats.score2 > 0 && (
-                            <tr>
-                              <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">
-                                {isTeachingStaff ? 'LESSON OBSERVATION (2nd)' : 'WORK OBSERVATION (2nd)'}
-                              </td>
-                              <td className="px-6 py-4 text-center text-sm text-gray-900">{observationStats.score2}</td>
-                            </tr>
-                        )}
-                        <tr className="bg-gray-50">
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300 font-bold">
-                            OBSERVATION FINAL SCORE
-                          </td>
-                          <td className="px-6 py-4 text-center text-sm text-gray-900 font-bold">{observationStats.totalScore}</td>
-                        </tr>
-                      </>
-                    )}
-                    <tr>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-300">EMPLOYEE EVALUATION</td>
-                      <td className="px-6 py-4 text-center text-sm text-gray-900">{evaluationStats.totalScore}</td>
-                    </tr>
-                    <tr className="bg-gray-100 font-bold">
-                      <td className="px-6 py-4 text-sm text-gray-900 border-r border-gray-300">TOTAL SCORE</td>
-                      <td className="px-6 py-4 text-center text-sm text-gray-900">{totalScore}</td>
-                    </tr>
-                    <tr className="bg-gray-100 font-bold">
-                      <td className="px-6 py-4 text-sm text-gray-900 border-r border-gray-300">PERCENTAGE</td>
-                      <td className="px-6 py-4 text-center text-sm text-gray-900">{percentage.toFixed(1)}%</td>
-                    </tr>
-                    <tr className="bg-gray-100 font-bold">
-                      <td className="px-6 py-4 text-sm text-gray-900 border-r border-gray-300">RATING</td>
-                      <td className="px-6 py-4 text-center text-sm text-gray-900 uppercase">{currentRating}</td>
-                    </tr>
-                  </tbody>
-             </table>
-
-             {/* Signatures */}
-             <div className="grid grid-cols-2 gap-8 mt-8">
-                <div className="border border-gray-300 p-4 h-40 flex flex-col justify-between">
-                   <span className="text-xs text-gray-500 uppercase">Appraisee Signature ({formData.term})</span>
-                   {formData.completionSignatures?.appraiseeSignature ? (
-                      <Image 
-                        src={formData.completionSignatures.appraiseeSignature} 
-                        alt="Appraisee Signature" 
-                        width={200} 
-                        height={80} 
-                        className="h-20 w-auto object-contain mx-auto" 
-                      />
-                   ) : <div className="text-center text-gray-400 italic">Not signed</div>}
-                   <span className="text-xs text-gray-500 text-right">{formData.completionSignatures?.appraiseeDate}</span>
-                </div>
-                <div className="border border-gray-300 p-4 h-40 flex flex-col justify-between">
-                   <span className="text-xs text-gray-500 uppercase">Appraiser Signature ({formData.term})</span>
-                   {formData.completionSignatures?.appraiserSignature ? (
-                      <Image 
-                        src={formData.completionSignatures.appraiserSignature} 
-                        alt="Appraiser Signature" 
-                        width={200} 
-                        height={80} 
-                        className="h-20 w-auto object-contain mx-auto" 
-                      />
-                   ) : <div className="text-center text-gray-400 italic">Not signed</div>}
-                   <span className="text-xs text-gray-500 text-right">{formData.completionSignatures?.appraiserDate}</span>
-                </div>
-             </div>
-             
-             <div className="mt-8 flex flex-col items-center break-inside-avoid">
-                <span className="text-gray-900 font-bold uppercase mb-2">Official School Stamp</span>
-                <div className="border-2 border-gray-800 h-32 w-48 bg-white"></div>
-             </div>
-          </div>
-        </div>
+        <AppraisalReportDocument
+          appraiseeName={appraisee.full_name}
+          appraiseeRole={appraisee.role}
+          appraiserName={existingAppraisal?.appraiser_name || appraiser?.full_name || ''}
+          term={formData.term}
+          year={formData.year}
+          showTargets={showTargets}
+          showObservations={showObservations}
+          isTeachingStaff={isTeachingStaff}
+          isCoach={isCoach}
+          targets={formData.targets || []}
+          observation1={formData.observation1}
+          observation2={formData.observation2}
+          observationParams={getObservationParameters()}
+          evaluationParams={getEvaluationParameters()}
+          evaluationRatings={formData.evaluation?.ratings || {}}
+          progressComment={formData.evaluation?.progressComments?.[0]}
+          improvementComment={formData.evaluation?.improvementComments?.[0]}
+          targetMarks={targetStats.marks}
+          observationScore1={observationStats.score1}
+          observationScore2={observationStats.score2}
+          observationTotal={observationStats.totalScore}
+          evaluationTotal={evaluationStats.totalScore}
+          totalScore={totalScore}
+          percentage={percentage}
+          rating={currentRating}
+          appraiseeSignature={formData.completionSignatures?.appraiseeSignature}
+          appraiseeSignatureDate={formData.completionSignatures?.appraiseeDate}
+          appraiserSignature={formData.completionSignatures?.appraiserSignature}
+          appraiserSignatureDate={formData.completionSignatures?.appraiserDate}
+        />
       )}
 
       {/* TARGETS VIEW */}
