@@ -1495,6 +1495,15 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                           </select>
                         </div>
                         <div>
+                          <label htmlFor="additionalRoles" className="block text-sm font-medium text-gray-700">Additional Roles</label>
+                          <select name="additionalRoles" id="additionalRoles" multiple className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white h-32">
+                            {ROLES.filter(role => role !== 'SUPER ADMIN' && role !== 'DIRECTOR').map(role => (
+                              <option key={role} value={role}>{role}</option>
+                            ))}
+                          </select>
+                          <p className="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple. Use this for staff appraised separately under more than one role (e.g. Teacher + Head of Panels).</p>
+                        </div>
+                        <div>
                           <label htmlFor="jobCategory" className="block text-sm font-medium text-gray-700">Job Category</label>
                           <select name="jobCategory" id="jobCategory" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white">
                             <option value="">Select Category</option>
@@ -1539,6 +1548,15 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                               <option key={role} value={role}>{role}</option>
                             ))}
                           </select>
+                        </div>
+                        <div>
+                          <label htmlFor="edit-additionalRoles" className="block text-sm font-medium text-gray-700">Additional Roles</label>
+                          <select name="additionalRoles" id="edit-additionalRoles" multiple defaultValue={(editingUser.roles || []).filter(r => r !== editingUser.role)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white h-32">
+                            {ROLES.filter(role => role !== 'SUPER ADMIN' && role !== 'DIRECTOR').map(role => (
+                              <option key={role} value={role}>{role}</option>
+                            ))}
+                          </select>
+                          <p className="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple. Use this for staff appraised separately under more than one role (e.g. Teacher + Head of Panels).</p>
                         </div>
                         <div>
                           <label htmlFor="edit-jobCategory" className="block text-sm font-medium text-gray-700">Job Category</label>

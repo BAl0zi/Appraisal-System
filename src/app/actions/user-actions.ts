@@ -10,11 +10,7 @@ export async function createUser(prevState: any, formData: FormData) {
   const role = formData.get('role') as UserRole
   const fullName = formData.get('fullName') as string
   const jobCategory = formData.get('jobCategory') as string
-  const additionalRolesStr = formData.get('additionalRoles') as string
-  
-  const additionalRoles = additionalRolesStr 
-    ? additionalRolesStr.split(',').map(r => r.trim()).filter(r => r.length > 0)
-    : [];
+  const additionalRoles = formData.getAll('additionalRoles').map(r => String(r).trim()).filter(r => r.length > 0)
 
   if (!email || !password || !role || !fullName || !jobCategory) {
     return { error: 'All fields are required' }
@@ -170,17 +166,19 @@ export async function resetUserPassword(userId: string, newPassword: string) {
 export async function updateUser(userId: string, formData: FormData) {
     const role = formData.get('role') as UserRole
     const jobCategory = formData.get('jobCategory') as string
-  
+    const additionalRoles = formData.getAll('additionalRoles').map(r => String(r).trim()).filter(r => r.length > 0 && r !== role)
+
     if (!role || !jobCategory) {
       return { error: 'Role and Job Category are required' }
     }
-  
+
     try {
       const { error } = await supabaseAdmin
         .from('users')
         .update({
           role,
-          job_category: jobCategory
+          job_category: jobCategory,
+          additional_roles: additionalRoles
         })
         .eq('id', userId)
   
