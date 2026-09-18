@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { ROLES, UserRole } from '@/constants/roles';
 import { Check, ChevronDown, Loader2, Lock, Mail, Shield } from 'lucide-react';
 import clsx from 'clsx';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -163,22 +164,18 @@ export default function LoginPage() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border text-gray-900 bg-white"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+              <PasswordInput
+                id="password"
+                name="password"
+                autoComplete="current-password"
+                required
+                leftIcon={<Lock className="h-5 w-5 text-gray-400" aria-hidden="true" />}
+                wrapperClassName="mt-1 shadow-sm"
+                className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 border text-gray-900 bg-white"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
 
             {error && (

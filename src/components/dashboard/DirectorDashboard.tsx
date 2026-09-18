@@ -14,6 +14,8 @@ import { Trash2, UserPlus, Users, ClipboardList, AlertTriangle, Check, X, Refres
 import AssignmentManager from '@/components/dashboard/AssignmentManager';
 import AppraiserContent from '@/components/dashboard/AppraiserContent';
 import DashboardLayout from './DashboardLayout';
+import PasswordInput from '@/components/PasswordInput';
+import { generateSecurePassword } from '@/constants/password';
 
 type User = {
   id: string;
@@ -204,17 +206,8 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
     }
   };
 
-  const generatePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let pass = '';
-    for (let i = 0; i < 12; i++) {
-        pass += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return pass;
-  };
-
   const openUserModal = () => {
-    setGeneratedPassword(generatePassword());
+    setGeneratedPassword(generateSecurePassword());
     setIsModalOpen(true);
   };
 
@@ -275,7 +268,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
     if (!confirm(`Are you sure you want to reset the password for ${user.full_name}?`)) return;
     
     setActionLoading(`RESET_PASSWORD_${user.id}`);
-    const newPassword = generatePassword();
+    const newPassword = generateSecurePassword();
     const result = await resetUserPassword(user.id, newPassword);
     
     if (result.success) {
@@ -1343,9 +1336,8 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                         <form onSubmit={handleUpdatePassword} className="space-y-6">
                             <div>
                                 <label htmlFor="new-password" className="block text-sm font-bold text-gray-700 mb-2">New Password</label>
-                                <input
+                                <PasswordInput
                                   id="new-password"
-                                  type="password"
                                   required
                                   value={newPassword}
                                   onChange={(e) => setNewPassword(e.target.value)}
@@ -1355,9 +1347,8 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                             </div>
                             <div>
                                 <label htmlFor="confirm-password" className="block text-sm font-bold text-gray-700 mb-2">Confirm Password</label>
-                                <input
+                                <PasswordInput
                                   id="confirm-password"
-                                  type="password"
                                   required
                                   value={confirmPassword}
                                   onChange={(e) => setConfirmPassword(e.target.value)}

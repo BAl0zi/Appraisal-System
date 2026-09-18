@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Users, FileText, CheckCircle, Clock, Play, LogOut, Trash2, History, Loader2, Key, AlertTriangle, Check, Download } from 'lucide-react';
 import { deleteAppraisal } from '@/app/actions/appraisal-actions';
+import PasswordInput from '@/components/PasswordInput';
 
 interface AppraiserContentProps {
   currentUser: { id: string; email?: string; full_name?: string };
@@ -610,40 +611,30 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     New Password
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Key className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                      placeholder="Enter new password"
-                      required
-                      minLength={6}
-                    />
-                  </div>
+                  <PasswordInput
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    leftIcon={<Key className="h-5 w-5 text-gray-400" />}
+                    className="block w-full py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                    placeholder="Enter new password"
+                    required
+                    minLength={6}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     Confirm Password
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Key className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                      placeholder="Confirm new password"
-                      required
-                      minLength={6}
-                    />
-                  </div>
+                  <PasswordInput
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    leftIcon={<Key className="h-5 w-5 text-gray-400" />}
+                    className="block w-full py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                    placeholder="Confirm new password"
+                    required
+                    minLength={6}
+                  />
                 </div>
 
                 <div className="pt-4">

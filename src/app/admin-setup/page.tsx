@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { resetSystemForProduction } from '@/app/actions/production-cleanup';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function AdminSetupPage() {
   const [email, setEmail] = useState('');
@@ -51,8 +52,7 @@ export default function AdminSetupPage() {
 
           <div>
             <label className="block text-sm font-medium mb-1">Director Password (Optional)</label>
-            <input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:border-indigo-500 text-white"

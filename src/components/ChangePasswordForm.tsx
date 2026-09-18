@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function ChangePasswordForm({ userId }: { userId: string }) {
   const [password, setPassword] = useState('');
@@ -68,10 +69,9 @@ export default function ChangePasswordForm({ userId }: { userId: string }) {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="password-reset" className="sr-only">New Password</label>
-              <input
+              <PasswordInput
                 id="password-reset"
                 name="password"
-                type="password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm bg-white/90"
                 placeholder="New Password"
@@ -81,10 +81,9 @@ export default function ChangePasswordForm({ userId }: { userId: string }) {
             </div>
             <div>
               <label htmlFor="confirm-password" className="sr-only">Confirm Password</label>
-              <input
+              <PasswordInput
                 id="confirm-password"
                 name="confirmPassword"
-                type="password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm bg-white/90"
                 placeholder="Confirm Password"
