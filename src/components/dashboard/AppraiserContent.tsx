@@ -389,22 +389,22 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                   const status = appraisal?.status || 'NOT STARTED';
                   return (
                     <div key={`${appraisee.id}-${appraisee.assignedRole}`} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center space-x-4">
-                          <div className="h-12 w-12 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-lg group-hover:bg-brand-600 group-hover:text-white transition-colors">
-                            {appraisee.full_name[0]}
-                          </div>
-                          <div>
-                            <h4 className="text-base font-bold text-gray-900 truncate max-w-[150px]">{appraisee.full_name}</h4>
-                            <p className="text-xs text-gray-500 font-medium bg-gray-50 px-2 py-0.5 rounded-md inline-block mt-1">{appraisee.assignedRole}</p>
-                          </div>
+                      <div className="flex items-start space-x-4 mb-6">
+                        <div className="h-12 w-12 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-lg group-hover:bg-brand-600 group-hover:text-white transition-colors shrink-0">
+                          {appraisee.full_name[0]}
                         </div>
-                        <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                           status === 'COMPLETED' || status === 'SIGNED' ? 'bg-green-100 text-green-700' :
-                           status === 'DRAFT' ? 'bg-yellow-100 text-yellow-700' :
-                           'bg-gray-100 text-gray-600'
-                        }`}>
-                           {status === 'NOT STARTED' ? 'Pending' : status}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-base font-bold text-gray-900 truncate" title={appraisee.full_name}>{appraisee.full_name}</h4>
+                          <div className="flex items-center flex-wrap gap-1.5 mt-1">
+                            <p className="text-xs text-gray-500 font-medium bg-gray-50 px-2 py-0.5 rounded-md">{appraisee.assignedRole}</p>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                               status === 'COMPLETED' || status === 'SIGNED' ? 'bg-green-100 text-green-700' :
+                               status === 'DRAFT' ? 'bg-yellow-100 text-yellow-700' :
+                               'bg-gray-100 text-gray-600'
+                            }`}>
+                               {status === 'NOT STARTED' ? 'Pending' : status}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       
