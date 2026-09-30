@@ -37,7 +37,7 @@ export default function TeamPerformance({ currentUser }: TeamPerformanceProps) {
     if (loading) {
         return (
             <div className="flex justify-center items-center p-12">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
             </div>
         );
     }
@@ -46,15 +46,15 @@ export default function TeamPerformance({ currentUser }: TeamPerformanceProps) {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Team Performance</h2>
-                    <p className="text-gray-500">Monitor appraisals conducted by your direct reports.</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Team Performance</h2>
+                    <p className="text-gray-500 dark:text-gray-400">Monitor appraisals conducted by your direct reports.</p>
                 </div>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-100">
-                        <thead className="bg-[#FDFBF7]">
+                    <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+                        <thead className="bg-[#F6F9F8] dark:bg-gray-900/40">
                             <tr>
                                 <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                     Conducted By (Your Appraisee)
@@ -76,7 +76,7 @@ export default function TeamPerformance({ currentUser }: TeamPerformanceProps) {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-50">
+                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-50 dark:divide-gray-700">
                             {indirectAppraisals.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
@@ -87,12 +87,12 @@ export default function TeamPerformance({ currentUser }: TeamPerformanceProps) {
                                 </tr>
                             ) : (
                                 indirectAppraisals.map((appraisal) => (
-                                    <tr key={appraisal.id} className="hover:bg-gray-50/50 transition-colors">
+                                    <tr key={appraisal.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/40 transition-colors">
                                         <td className="px-6 py-5 whitespace-nowrap">
-                                            <span className="text-sm font-bold text-gray-900">{appraisal.appraiser?.full_name}</span>
+                                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{appraisal.appraiser?.full_name}</span>
                                         </td>
                                         <td className="px-6 py-5 whitespace-nowrap">
-                                            <span className="text-sm font-medium text-gray-700">{appraisal.appraisee?.full_name}</span>
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{appraisal.appraisee?.full_name}</span>
                                         </td>
                                         <td className="px-6 py-5 whitespace-nowrap">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
@@ -110,9 +110,9 @@ export default function TeamPerformance({ currentUser }: TeamPerformanceProps) {
                                         </td>
                                         <td className="px-6 py-5 whitespace-nowrap">
                                             {appraisal.overall_score ? (
-                                                <span className="text-lg font-bold text-gray-900">{appraisal.overall_score}</span>
+                                                <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{appraisal.overall_score}</span>
                                             ) : (
-                                                <span className="text-gray-300">-</span>
+                                                <span className="text-gray-300 dark:text-gray-600">-</span>
                                             )}
                                         </td>
                                         <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
@@ -121,7 +121,7 @@ export default function TeamPerformance({ currentUser }: TeamPerformanceProps) {
                                                     <>
                                                         <button
                                                             onClick={() => window.open(`/dashboard/appraisal/${appraisal.appraisee_id}?appraisalId=${appraisal.id}&view=SCORESHEET&hideBack=true`, '_blank')}
-                                                            className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm flex items-center"
+                                                            className="p-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-emerald-400 hover:border-brand-200 dark:hover:border-emerald-700 transition-all shadow-sm flex items-center"
                                                             title="View Full Report"
                                                         >
                                                             <Eye className="h-4 w-4 mr-2" />
@@ -130,7 +130,7 @@ export default function TeamPerformance({ currentUser }: TeamPerformanceProps) {
 
                                                         <button
                                                             onClick={() => window.open(`/dashboard/appraiser/${appraisal.appraiser_id || appraisal.appraiser?.id}/reports?appraiserId=${appraisal.appraiser_id || appraisal.appraiser?.id}`, '_blank')}
-                                                            className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm flex items-center"
+                                                            className="p-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-emerald-400 hover:border-brand-200 dark:hover:border-emerald-700 transition-all shadow-sm flex items-center"
                                                             title="View All Appraisals by Appraiser"
                                                         >
                                                             <FileText className="h-4 w-4 mr-2" />
@@ -138,7 +138,7 @@ export default function TeamPerformance({ currentUser }: TeamPerformanceProps) {
                                                         </button>
                                                     </>
                                                 ) : (
-                                                    <button className="text-gray-400 font-bold text-xs bg-gray-50 px-3 py-1.5 rounded-lg" disabled>
+                                                    <button className="text-gray-400 dark:text-gray-500 font-bold text-xs bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-lg" disabled>
                                                         Draft
                                                     </button>
                                                 )}

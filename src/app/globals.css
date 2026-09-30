@@ -9,6 +9,18 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Brand accent (forest green), used in place of Tailwind's default indigo/blue accents */
+  --brand-50: #e6f0ec;
+  --brand-100: #c3ddd0;
+  --brand-200: #9cc9b3;
+  --brand-300: #6fb190;
+  --brand-400: #3d9370;
+  --brand-500: #1a6b48;
+  --brand-600: #0d5438;
+  --brand-700: #06402b;
+  --brand-800: #043320;
+  --brand-900: #032818;
 }
 
 @theme inline {
@@ -16,6 +28,17 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
 }
 
 .dark {

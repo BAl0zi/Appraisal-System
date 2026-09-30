@@ -3,19 +3,19 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Users, FileText, CheckCircle, Clock, Play, LogOut, Trash2, History, Loader2, Key, AlertTriangle, Check, Download } from 'lucide-react';
+import { Users, CheckCircle, Clock, Play, LogOut, Trash2, History, Loader2, Key, AlertTriangle, Check, Download, LayoutGrid, List } from 'lucide-react';
 import { deleteAppraisal } from '@/app/actions/appraisal-actions';
 import PasswordInput from '@/components/PasswordInput';
 
 interface AppraiserContentProps {
   currentUser: { id: string; email?: string; full_name?: string };
-  initialTab?: 'home' | 'appraisals' | 'settings';
-  currentTab?: 'home' | 'appraisals' | 'settings';
+  initialTab?: 'home' | 'settings';
+  currentTab?: 'home' | 'settings';
 }
 
 export default function AppraiserContent({ currentUser, initialTab = 'home', currentTab }: AppraiserContentProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'home' | 'appraisals' | 'settings'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'home' | 'settings'>(initialTab);
 
   useEffect(() => {
     if (currentTab) {
@@ -30,6 +30,7 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
   const [appraisees, setAppraisees] = useState<any[]>([]);
   const [appraisals, setAppraisals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   
   // Password Change State
   const [newPassword, setNewPassword] = useState('');
@@ -243,62 +244,50 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
         {/* Controls Header */}
         {activeTab !== 'settings' && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-          {/* Tabs */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-1.5 inline-flex">
-            <nav className="flex space-x-1" aria-label="Tabs">
-              <button
-                onClick={() => setActiveTab('home')}
-                className={`${
-                  activeTab === 'home'
-                    ? 'bg-indigo-50 text-indigo-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                } px-5 py-2.5 rounded-xl font-bold text-sm flex items-center transition-all`}
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Overview
-              </button>
-              <button
-                onClick={() => setActiveTab('appraisals')}
-                className={`${
-                  activeTab === 'appraisals'
-                    ? 'bg-indigo-50 text-indigo-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                } px-5 py-2.5 rounded-xl font-bold text-sm flex items-center transition-all`}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Appraisals List
-              </button>
-            </nav>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">My Appraisals</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage and track your assigned staff appraisals.</p>
           </div>
 
-          {/* Period Selector */}
-          <div className="flex items-center space-x-4 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-            <div className="flex items-center space-x-2 pl-2">
-              <label htmlFor="view-term" className="text-sm font-bold text-gray-600 whitespace-nowrap">Term:</label>
-              <select
-                id="view-term"
-                value={viewTerm}
-                onChange={(e) => setViewTerm(e.target.value)}
-                className="block w-full pl-3 pr-8 py-1.5 text-sm border-gray-200 text-gray-900 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-lg transition-colors cursor-pointer font-medium"
-              >
-                <option value="Term 1">Term 1</option>
-                <option value="Term 2">Term 2</option>
-                <option value="Term 3">Term 3</option>
-              </select>
-            </div>
-            <div className="flex items-center space-x-2 border-l border-gray-200 pl-4">
-              <label htmlFor="view-year" className="text-sm font-bold text-gray-600 whitespace-nowrap">Year:</label>
-              <select
-                id="view-year"
-                value={viewYear}
-                onChange={(e) => setViewYear(e.target.value)}
-                className="block w-full pl-3 pr-8 py-1.5 text-sm border-gray-200 text-gray-900 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-lg transition-colors cursor-pointer font-medium"
-              >
-                {[0, 1, 2].map(offset => {
-                  const y = (parseInt(new Date().getFullYear().toString()) - 1 + offset).toString();
-                  return <option key={y} value={y}>{y}</option>;
-                })}
-              </select>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <a
+              href={`/print/scoresheet/bulk/${currentUser.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center px-4 py-2 border border-gray-200 text-sm font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm shrink-0"
+            >
+              <Download className="h-4 w-4 mr-2" /> Download All (PDF)
+            </a>
+
+            {/* Period Selector */}
+            <div className="flex items-center space-x-4 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-2 pl-2">
+                <label htmlFor="view-term" className="text-sm font-bold text-gray-600 whitespace-nowrap">Term:</label>
+                <select
+                  id="view-term"
+                  value={viewTerm}
+                  onChange={(e) => setViewTerm(e.target.value)}
+                  className="block w-full pl-3 pr-8 py-1.5 text-sm border-gray-200 text-gray-900 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-brand-500 focus:border-brand-500 rounded-lg transition-colors cursor-pointer font-medium"
+                >
+                  <option value="Term 1">Term 1</option>
+                  <option value="Term 2">Term 2</option>
+                  <option value="Term 3">Term 3</option>
+                </select>
+              </div>
+              <div className="flex items-center space-x-2 border-l border-gray-200 pl-4">
+                <label htmlFor="view-year" className="text-sm font-bold text-gray-600 whitespace-nowrap">Year:</label>
+                <select
+                  id="view-year"
+                  value={viewYear}
+                  onChange={(e) => setViewYear(e.target.value)}
+                  className="block w-full pl-3 pr-8 py-1.5 text-sm border-gray-200 text-gray-900 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-brand-500 focus:border-brand-500 rounded-lg transition-colors cursor-pointer font-medium"
+                >
+                  {[0, 1, 2].map(offset => {
+                    const y = (parseInt(new Date().getFullYear().toString()) - 1 + offset).toString();
+                    return <option key={y} value={y}>{y}</option>;
+                  })}
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -314,11 +303,11 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                       <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Total Assigned</p>
                       <h3 className="text-3xl font-bold text-gray-900">{totalAppraisees}</h3>
                   </div>
-                  <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                  <div className="h-12 w-12 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600 group-hover:scale-110 transition-transform">
                       <Users className="h-6 w-6" />
                   </div>
                 </div>
-                <div className="absolute -bottom-4 -right-4 h-24 w-24 bg-indigo-50 rounded-full opacity-50 blur-xl group-hover:opacity-70 transition-opacity"></div>
+                <div className="absolute -bottom-4 -right-4 h-24 w-24 bg-brand-50 rounded-full opacity-50 blur-xl group-hover:opacity-70 transition-opacity"></div>
               </div>
 
               {/* Completed */}
@@ -366,10 +355,33 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
 
             {/* Appraisee Score Cards */}
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <span className="w-1.5 h-6 bg-indigo-500 rounded-full mr-3"></span>
-                Appraisee Performance Cards
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+                  <span className="w-1.5 h-6 bg-brand-500 rounded-full mr-3"></span>
+                  Appraisee Performance Cards
+                </h3>
+                <div className="flex items-center bg-white p-1 rounded-xl shadow-sm border border-gray-100 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('cards')}
+                    title="Card view"
+                    aria-label="Card view"
+                    className={`p-2 rounded-lg transition-colors ${viewMode === 'cards' ? 'bg-brand-50 text-brand-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    title="List view"
+                    aria-label="List view"
+                    className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-brand-50 text-brand-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              {viewMode === 'cards' && (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {appraisees.map((appraisee) => {
                   const appraisal = getAppraisalForUser(appraisee.id, appraisee.assignedRole);
@@ -379,7 +391,7 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                     <div key={`${appraisee.id}-${appraisee.assignedRole}`} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 group">
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-4">
-                          <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                          <div className="h-12 w-12 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-lg group-hover:bg-brand-600 group-hover:text-white transition-colors">
                             {appraisee.full_name[0]}
                           </div>
                           <div>
@@ -429,8 +441,8 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                             disabled={!!navigatingHref}
                             className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed
                               ${status === 'NOT STARTED'
-                                ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-200'
-                                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100'}`}
+                                ? 'bg-brand-600 text-white hover:bg-brand-700 shadow-md shadow-brand-200'
+                                : 'bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-100'}`}
                           >
                             {isThisNavigating ? (
                                 <>
@@ -448,148 +460,146 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                           </button>
                         );
                       })()}
+
+                      <div className="flex items-center justify-end gap-1 mt-2">
+                        <button
+                          onClick={() => handleViewHistory(appraisee.id, appraisee.full_name)}
+                          className="p-2 text-gray-400 hover:text-gray-600 bg-transparent hover:bg-gray-100 rounded-lg transition-all"
+                          title="View History"
+                        >
+                          <History className="h-4 w-4" />
+                        </button>
+                        {appraisal?.id && (
+                          <button
+                            onClick={() => {
+                              setSelectedAppraisalId(appraisal.id);
+                              setIsDeleteModalOpen(true);
+                            }}
+                            className="p-2 text-gray-400 hover:text-red-600 bg-transparent hover:bg-red-50 rounded-lg transition-all"
+                            title="Delete Appraisal"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
-          </div>
-        )}
-        
-        {activeTab === 'appraisals' && (
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-             
-            <div className="px-8 py-6 border-b border-gray-100 bg-[#FDFBF7]/50 flex justify-between items-center">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Assigned Appraisals</h3>
-                  <p className="text-sm text-gray-500 mt-1">Manage and track your assigned staff appraisals.</p>
-                </div>
-                <a
-                  href={`/print/scoresheet/bulk/${currentUser.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm shrink-0"
-                >
-                  <Download className="h-4 w-4 mr-2" /> Download All (PDF)
-                </a>
-            </div>
+              )}
 
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-100">
-                  <thead className="bg-[#FDFBF7]">
-                    <tr>
-                      <th scope="col" className="px-8 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Appraisee
-                      </th>
-                      <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Role
-                      </th>
-                      <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Score
-                      </th>
-                      <th scope="col" className="relative px-6 py-5">
-                        <span className="sr-only">Actions</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-50">
-                    {appraisees.map((appraisee) => {
-                      const appraisal = getAppraisalForUser(appraisee.id, appraisee.assignedRole);
-                      const status = appraisal?.status || 'NOT STARTED';
-                      const isDeletionRequested = appraisal?.deletion_requested;
-                      return (
-                        <tr key={`${appraisee.id}-${appraisee.assignedRole}`} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-8 py-5 whitespace-nowrap">
-                            <div className="flex items-center">
-                                <div className="h-10 w-10 shrink-0 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm mr-4">
-                                    {appraisee.full_name[0]}
-                                </div>
-                                <div>
-                                    <div className="text-sm font-bold text-gray-900">{appraisee.full_name}</div>
-                                    <div className="text-xs text-gray-400 font-medium">{appraisee.email}</div>
-                                </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-5 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                              {appraisee.assignedRole}
-                            </span>
-                          </td>
-                          <td className="px-6 py-5 whitespace-nowrap">
-                             <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full 
-                              ${isDeletionRequested ? 'bg-red-50 text-red-700 border border-red-100' :
-                                status === 'COMPLETED' || status === 'SIGNED' ? 'bg-green-50 text-green-700 border border-green-100' : 
-                                status === 'DRAFT' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' : 
-                                'bg-gray-50 text-gray-600 border border-gray-100'
-                              }`}>
-                              {isDeletionRequested ? 'DELETION REQ.' : status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-5 whitespace-nowrap">
-                            {appraisal?.overall_score ? (
-                                <span className="text-lg font-bold text-gray-900">{appraisal.overall_score}</span>
-                            ) : (
-                                <span className="text-gray-300">-</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
-                            <div className="flex justify-end space-x-3 items-center">
-                              {status === 'NOT STARTED' ? (
-                                <button
-                                  onClick={() => handleStartAppraisalClick(appraisee.id, appraisee.assignedRole)}
-                                  disabled={!!navigatingHref}
-                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                                >
-                                  <Play className="h-3 w-3 mr-1.5 fill-current" /> Start
-                                </button>
-                              ) : (() => {
-                                const rowHref = getAppraisalHref(appraisee.id, appraisal, appraisee.assignedRole);
-                                const isThisNavigating = navigatingHref === rowHref;
-                                return (
-                                  <button
-                                    onClick={() => navigateTo(rowHref)}
-                                    disabled={!!navigatingHref}
-                                    className="inline-flex items-center px-3 py-1.5 border border-gray-200 text-xs font-bold rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                                  >
-                                    {isThisNavigating ? (
-                                      <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> Loading...</>
-                                    ) : status === 'COMPLETED' || status === 'SIGNED' ? 'View Report' : 'Continue'}
-                                  </button>
-                                );
-                              })()}
-                              
-                              <button
-                                onClick={() => handleViewHistory(appraisee.id, appraisee.full_name)}
-                                className="p-2 text-gray-400 hover:text-gray-600 bg-transparent hover:bg-gray-100 rounded-lg transition-all"
-                                title="View History"
-                              >
-                                <History className="h-4 w-4" />
-                              </button>
-
-                              {appraisal?.id && (
-                                <button
-                                  onClick={() => {
-                                    setSelectedAppraisalId(appraisal.id);
-                                    setIsDeleteModalOpen(true);
-                                  }}
-                                  className="p-2 text-gray-400 hover:text-red-600 bg-transparent hover:bg-red-50 rounded-lg transition-all"
-                                  title="Delete Appraisal"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
+              {viewMode === 'list' && appraisees.length > 0 && (
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-100">
+                    <thead className="bg-[#FDFBF7]">
+                      <tr>
+                        <th scope="col" className="px-8 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Appraisee</th>
+                        <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Role</th>
+                        <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Score</th>
+                        <th scope="col" className="relative px-6 py-5"><span className="sr-only">Actions</span></th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-50">
+                      {appraisees.map((appraisee) => {
+                        const appraisal = getAppraisalForUser(appraisee.id, appraisee.assignedRole);
+                        const status = appraisal?.status || 'NOT STARTED';
+                        const isDeletionRequested = appraisal?.deletion_requested;
+                        return (
+                          <tr key={`${appraisee.id}-${appraisee.assignedRole}`} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="px-8 py-5 whitespace-nowrap">
+                              <div className="flex items-center">
+                                  <div className="h-10 w-10 shrink-0 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-sm mr-4">
+                                      {appraisee.full_name[0]}
+                                  </div>
+                                  <div>
+                                      <div className="text-sm font-bold text-gray-900">{appraisee.full_name}</div>
+                                      <div className="text-xs text-gray-400 font-medium">{appraisee.email}</div>
+                                  </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                {appraisee.assignedRole}
+                              </span>
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap">
+                               <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full
+                                ${isDeletionRequested ? 'bg-red-50 text-red-700 border border-red-100' :
+                                  status === 'COMPLETED' || status === 'SIGNED' ? 'bg-green-50 text-green-700 border border-green-100' :
+                                  status === 'DRAFT' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
+                                  'bg-gray-50 text-gray-600 border border-gray-100'
+                                }`}>
+                                {isDeletionRequested ? 'DELETION REQ.' : status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap">
+                              {appraisal?.overall_score ? (
+                                  <span className="text-lg font-bold text-gray-900">{appraisal.overall_score}</span>
+                              ) : (
+                                  <span className="text-gray-300">-</span>
                               )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            </td>
+                            <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
+                              <div className="flex justify-end space-x-2 items-center">
+                                {status === 'NOT STARTED' ? (
+                                  <button
+                                    onClick={() => handleStartAppraisalClick(appraisee.id, appraisee.assignedRole)}
+                                    disabled={!!navigatingHref}
+                                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg text-white bg-brand-600 hover:bg-brand-700 shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                    <Play className="h-3 w-3 mr-1.5 fill-current" /> Start
+                                  </button>
+                                ) : (() => {
+                                  const rowHref = getAppraisalHref(appraisee.id, appraisal, appraisee.assignedRole);
+                                  const isThisNavigating = navigatingHref === rowHref;
+                                  return (
+                                    <button
+                                      onClick={() => navigateTo(rowHref)}
+                                      disabled={!!navigatingHref}
+                                      className="inline-flex items-center px-3 py-1.5 border border-gray-200 text-xs font-bold rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                      {isThisNavigating ? (
+                                        <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> Loading...</>
+                                      ) : status === 'COMPLETED' || status === 'SIGNED' ? 'View Report' : 'Continue'}
+                                    </button>
+                                  );
+                                })()}
+
+                                <button
+                                  onClick={() => handleViewHistory(appraisee.id, appraisee.full_name)}
+                                  className="p-2 text-gray-400 hover:text-gray-600 bg-transparent hover:bg-gray-100 rounded-lg transition-all"
+                                  title="View History"
+                                >
+                                  <History className="h-4 w-4" />
+                                </button>
+
+                                {appraisal?.id && (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedAppraisalId(appraisal.id);
+                                      setIsDeleteModalOpen(true);
+                                    }}
+                                    className="p-2 text-gray-400 hover:text-red-600 bg-transparent hover:bg-red-50 rounded-lg transition-all"
+                                    title="Delete Appraisal"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              )}
+
               {appraisees.length === 0 && (
-                  <div className="p-12 text-center text-gray-400">
+                  <div className="p-12 text-center text-gray-400 bg-white rounded-3xl border border-gray-100">
                     <Users className="h-12 w-12 mx-auto mb-4 opacity-20" />
                     <p className="text-lg font-medium">No appraisees assigned yet.</p>
                   </div>
@@ -615,7 +625,7 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     leftIcon={<Key className="h-5 w-5 text-gray-400" />}
-                    className="block w-full py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                    className="block w-full py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
                     placeholder="Enter new password"
                     required
                     minLength={6}
@@ -630,7 +640,7 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     leftIcon={<Key className="h-5 w-5 text-gray-400" />}
-                    className="block w-full py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                    className="block w-full py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
                     placeholder="Confirm new password"
                     required
                     minLength={6}
@@ -641,7 +651,7 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
                   <button
                     type="submit"
                     disabled={updatingPassword}
-                    className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     {updatingPassword ? (
                       <>

@@ -134,24 +134,24 @@ export default function DashboardLayout({ children, currentUser, role, customNav
   const navigation = customNavigation || defaultNavigation;
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#0a0a0a] flex font-sans text-gray-900 dark:text-gray-100 transition-colors print:bg-white print:text-black">
+    <div className="min-h-screen bg-[#F6F9F8] dark:bg-[#0a0a0a] flex font-sans text-gray-900 dark:text-gray-100 transition-colors print:bg-white print:text-black">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#1A1A1A] text-gray-400 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-0 print:hidden flex flex-col rounded-r-3xl m-0 lg:my-4 lg:ml-4 h-[calc(100vh-2rem)] shadow-2xl`}>
-        <div className="flex items-center justify-between h-24 px-8">
-          <span className="text-2xl font-bold tracking-tight text-white">Urafiki</span>
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-300 hover:text-white">
+      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-[#111827] text-gray-500 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-0 print:hidden flex flex-col border-r border-gray-100 dark:border-gray-800`}>
+        <div className="flex items-center justify-between h-20 px-6">
+          <span className="flex items-center gap-2 text-xl font-bold tracking-tight text-[#06402b] dark:text-emerald-400">
+            <img src="/logo.svg" alt="Urafiki Carovana School" className="h-9 w-auto" />
+            Urafiki
+          </span>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-gray-600">
             <X className="h-6 w-6" />
           </button>
         </div>
-        
-        <div className="px-6 flex-1 overflow-y-auto">
-           <div className="mb-10 pl-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">General</p>
-            <nav className="space-y-4">
+
+        <div className="px-4 flex-1 overflow-y-auto">
+           <div className="mb-10">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 px-3">General</p>
+            <nav className="space-y-1">
                 {navigation.map((item) => {
-                  // Determine if active based upon current URL or explicit property
-                  const isLinkActive = item.current || (typeof window !== 'undefined' && window.location.href.includes(item.href || 'XYZ'));
-                  
                   return (
                     <button
                         key={item.name}
@@ -160,22 +160,14 @@ export default function DashboardLayout({ children, currentUser, role, customNav
                         if (item.href && item.href !== '#') router.push(item.href);
                         setIsSidebarOpen(false);
                         }}
-                        className={`flex items-center w-full px-6 py-4 text-sm font-medium rounded-3xl transition-all duration-300 group relative overflow-hidden ${
-                        item.current 
-                            ? 'bg-[#E0C09E] text-gray-900 shadow-xl' 
-                            : 'text-gray-400 hover:bg-[#2D2D2D] hover:text-gray-200'
+                        className={`flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-xl transition-colors duration-150 group ${
+                        item.current
+                            ? 'bg-[#06402b]/10 text-[#06402b] dark:bg-emerald-400/10 dark:text-emerald-400'
+                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
                         }`}
                     >
-                        {item.current && (
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/50"></div>
-                        )}
-                        <item.icon className={`mr-4 h-6 w-6 transition-transform group-hover:scale-110 ${item.current ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-300'}`} />
-                        <span className="relative z-10">{item.name}</span>
-                        
-                        {/* Subtle glow for active item */}
-                        {item.current && (
-                             <div className="absolute right-0 top-0 h-20 w-20 bg-white/20 rounded-full -mr-10 -mt-10 blur-xl"></div>
-                        )}
+                        <item.icon className={`mr-3 h-5 w-5 ${item.current ? 'text-[#06402b] dark:text-emerald-400' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
+                        <span>{item.name}</span>
                     </button>
                   );
                 })}
@@ -183,38 +175,38 @@ export default function DashboardLayout({ children, currentUser, role, customNav
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-800">
-            <button 
+        <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+            <button
                 onClick={handleSignOut}
-                className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-400 rounded-2xl hover:bg-[#2D2D2D] hover:text-white transition-colors"
+                className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-500 rounded-xl hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200 transition-colors"
             >
-                <LogOut className="mr-4 h-5 w-5 text-gray-500" />
+                <LogOut className="mr-3 h-5 w-5 text-gray-400" />
                 Sign Out
             </button>
-            <div className="mt-6 flex items-center px-2">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+            <div className="mt-4 flex items-center px-3">
+                <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-orange-400 to-[#06402b] flex items-center justify-center text-sm font-bold text-white shadow-sm">
                 {currentUser.full_name?.[0] || currentUser.email?.[0] || 'U'}
                 </div>
                 <div className="ml-3 overflow-hidden">
-                    <p className="text-sm font-medium text-white truncate">{currentUser.full_name || 'User'}</p>
-                    <p className="text-xs text-gray-500 truncate">{role}</p>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{currentUser.full_name || 'User'}</p>
+                    <p className="text-xs text-gray-400 truncate">{role}</p>
                 </div>
             </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-screen bg-[#FDFBF7] dark:bg-[#0a0a0a] print:bg-white print:h-auto print:overflow-visible">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-screen bg-[#F6F9F8] dark:bg-[#0a0a0a] print:bg-white print:h-auto print:overflow-visible">
         {/* Top Header */}
         <header className="flex items-center justify-between px-8 py-6 print:hidden">
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-gray-500">
                 <Menu className="h-8 w-8" />
             </button>
-            
-            <div className="flex-1 max-w-2xl flex items-center bg-white dark:bg-gray-800 rounded-full px-4 py-2 shadow-sm border border-gray-100 dark:border-gray-700 ml-4 lg:ml-0 transition-colors">
-                <input 
-                    type="text" 
-                    placeholder="Search..." 
+
+            <div className="flex-1 max-w-2xl flex items-center bg-white dark:bg-gray-800 rounded-full px-4 py-2.5 shadow-sm border border-gray-100 dark:border-gray-700 ml-4 lg:ml-0 transition-colors focus-within:ring-2 focus-within:ring-[#06402b]/20 focus-within:border-[#06402b]/30">
+                <input
+                    type="text"
+                    placeholder="Search..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => {
@@ -227,13 +219,13 @@ export default function DashboardLayout({ children, currentUser, role, customNav
                 />
             </div>
 
-            <div className="flex items-center space-x-4 ml-4">
+            <div className="flex items-center space-x-3 ml-4">
                 <ThemeToggle />
                 <div className="relative">
-                  <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="p-2 rounded-full bg-white text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100 relative dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:text-white">
+                  <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="p-2.5 rounded-full bg-white text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100 relative dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:text-white">
                       <Bell className="h-5 w-5" />
                       {notifications.length > 0 && (
-                        <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
+                        <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-orange-500 ring-2 ring-white dark:ring-gray-800" />
                       )}
                   </button>
 

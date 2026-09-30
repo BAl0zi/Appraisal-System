@@ -403,7 +403,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
       </div>
     );
   }
@@ -428,116 +428,106 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
         {/* Content */}
         {activeTab === 'overview' && (
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Good morning, {isSuperAdmin ? 'Super Admin' : 'Director'}</h2>
-            <p className="text-gray-500 mb-8">Here is an overview of the appraisal system status today.</p>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Good morning, {isSuperAdmin ? 'Super Admin' : 'Director'}</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-8">Here is an overview of the appraisal system status today.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Card 1: Total Staff */}
-                <div className="bg-[#FAE29F] rounded-3xl p-6 shadow-sm relative overflow-hidden">
-                    <div className="relative z-10">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Total Staff</h3>
-                        <div className="flex items-baseline space-x-2">
-                            <span className="text-4xl font-bold text-gray-900">{users.length}</span>
-                            <span className="text-sm font-medium text-gray-800">registered</span>
-                        </div>
-                        <div className="mt-8 flex space-x-2">
-                             <div className="h-8 w-2 bg-black rounded-full"></div>
-                             <div className="h-4 w-2 bg-black/30 rounded-full mt-4"></div>
-                             <div className="h-6 w-2 bg-black/50 rounded-full mt-2"></div>
-                        </div>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div className="h-10 w-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-4">
+                        <Users className="h-5 w-5" />
                     </div>
-                    {/* Decorative Blob */}
-                    <div className="absolute -right-4 -top-4 h-32 w-32 bg-yellow-300 rounded-full opacity-50 blur-2xl"></div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Staff</h3>
+                    <div className="flex items-baseline space-x-2">
+                        <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{users.length}</span>
+                        <span className="text-xs font-medium text-gray-400">registered</span>
+                    </div>
                 </div>
 
                 {/* Card 2: Appraisals Summary */}
-                <div className="bg-[#F8BCD5] rounded-3xl p-6 shadow-sm relative overflow-hidden col-span-1 md:col-span-2">
-                     <div className="relative z-10">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Appraisal Summary</h3>
-                        <div className="grid grid-cols-3 gap-8">
-                            <div>
-                                <p className="text-2xl font-bold text-gray-900">{allAppraisals.length}</p>
-                                <p className="text-xs uppercase tracking-wide font-bold text-gray-700 mt-1">Total</p>
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {allAppraisals.filter(a => a.status === 'COMPLETED' || a.status === 'SIGNED').length}
-                                </p>
-                                <p className="text-xs uppercase tracking-wide font-bold text-gray-700 mt-1">Completed</p>
-                            </div>
-                             <div>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {allAppraisals.filter(a => a.status !== 'COMPLETED' && a.status !== 'SIGNED').length}
-                                </p>
-                                <p className="text-xs uppercase tracking-wide font-bold text-gray-700 mt-1">In Progress</p>
-                            </div>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 col-span-1 md:col-span-2">
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Appraisal Summary</h3>
+                    <div className="grid grid-cols-3 gap-8">
+                        <div>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{allAppraisals.length}</p>
+                            <p className="text-xs uppercase tracking-wide font-semibold text-gray-400 mt-1">Total</p>
                         </div>
-                        {/* Decorative Wave/Line Graph Approximation */}
-                        <div className="mt-6 h-12 w-full">
-                           <svg viewBox="0 0 100 20" className="w-full h-full stroke-gray-800 fill-none stroke-2">
-                               <path d="M0,15 Q25,5 50,10 T100,2" />
-                           </svg>
+                        <div>
+                            <p className="text-2xl font-bold text-[#06402b] dark:text-emerald-400">
+                                {allAppraisals.filter(a => a.status === 'COMPLETED' || a.status === 'SIGNED').length}
+                            </p>
+                            <p className="text-xs uppercase tracking-wide font-semibold text-gray-400 mt-1">Completed</p>
+                        </div>
+                         <div>
+                            <p className="text-2xl font-bold text-orange-500">
+                                {allAppraisals.filter(a => a.status !== 'COMPLETED' && a.status !== 'SIGNED').length}
+                            </p>
+                            <p className="text-xs uppercase tracking-wide font-semibold text-gray-400 mt-1">In Progress</p>
                         </div>
                     </div>
-                     <div className="absolute right-0 top-0 h-48 w-48 bg-pink-300 rounded-full opacity-50 blur-3xl"></div>
+                    <div className="mt-6 h-10 w-full">
+                       <svg viewBox="0 0 100 20" className="w-full h-full stroke-[#06402b] dark:stroke-emerald-400 fill-none stroke-2">
+                           <path d="M0,15 Q25,5 50,10 T100,2" />
+                       </svg>
+                    </div>
                 </div>
 
                 {/* Card 3: Deletion Requests */}
-                <div className="bg-[#A4C8F4] rounded-3xl p-6 shadow-sm relative overflow-hidden">
-                    <div className="relative z-10">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Requests</h3>
-                         <div className="flex items-baseline space-x-2">
-                            <span className="text-4xl font-bold text-gray-900">{deletionRequests.length}</span>
-                            <span className="text-sm font-medium text-gray-800">pending</span>
-                        </div>
-                         <div className="mt-6">
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/40 text-gray-900">
-                                {deletionRequests.length > 0 ? 'Action Required' : 'All Clear'}
-                            </span>
-                        </div>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div className="h-10 w-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-500 flex items-center justify-center mb-4">
+                        <AlertTriangle className="h-5 w-5" />
                     </div>
-                     <div className="absolute -left-4 -bottom-4 h-32 w-32 bg-blue-300 rounded-full opacity-50 blur-2xl"></div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Requests</h3>
+                    <div className="flex items-baseline space-x-2">
+                        <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{deletionRequests.length}</span>
+                        <span className="text-xs font-medium text-gray-400">pending</span>
+                    </div>
+                    <div className="mt-4">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${deletionRequests.length > 0 ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400' : 'bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400'}`}>
+                            {deletionRequests.length > 0 ? 'Action Required' : 'All Clear'}
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
                  {/* Secondary Section - Latest Activity or similar */}
-                 <div className="bg-[#98B486] rounded-3xl p-6 shadow-sm col-span-1">
-                     <h3 className="text-lg font-bold text-gray-900 mb-4">System Status</h3>
-                     <div className="space-y-4">
-                        <div className="flex justify-between items-center bg-white/30 p-3 rounded-xl">
-                            <span className="text-sm font-medium text-gray-900">Database</span>
-                            <span className="text-xs font-bold text-green-900">ONLINE</span>
+                 <div className="bg-[#06402b] rounded-2xl p-6 shadow-sm col-span-1">
+                     <h3 className="text-sm font-medium text-white/70 mb-4">System Status</h3>
+                     <div className="space-y-3">
+                        <div className="flex justify-between items-center bg-white/10 p-3 rounded-xl">
+                            <span className="text-sm font-medium text-white">Database</span>
+                            <span className="text-xs font-bold text-emerald-300">ONLINE</span>
                         </div>
-                         <div className="flex justify-between items-center bg-white/30 p-3 rounded-xl">
-                            <span className="text-sm font-medium text-gray-900">Role</span>
-                            <span className="text-xs font-bold text-green-900">{isSuperAdmin ? 'SUPER ADMIN' : 'DIRECTOR'}</span>
+                         <div className="flex justify-between items-center bg-white/10 p-3 rounded-xl">
+                            <span className="text-sm font-medium text-white">Role</span>
+                            <span className="text-xs font-bold text-emerald-300">{isSuperAdmin ? 'SUPER ADMIN' : 'DIRECTOR'}</span>
                         </div>
                      </div>
                  </div>
 
-                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 col-span-2">
-                     <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 col-span-2">
+                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Quick Actions</h3>
                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <button onClick={() => setActiveTab('users')} className="p-4 rounded-xl bg-gray-50 hover:bg-gray-100 text-left transition-colors">
-                            <Users className="h-6 w-6 text-gray-700 mb-2" />
-                            <span className="font-bold text-gray-900 block">Manage Staff</span>
-                            <span className="text-xs text-gray-500">Edit roles, reset passwords</span>
+                        <button onClick={() => setActiveTab('users')} className="p-4 rounded-xl bg-sky-50/60 dark:bg-sky-500/10 hover:bg-sky-50 dark:hover:bg-sky-500/20 text-left transition-colors">
+                            <Users className="h-6 w-6 text-sky-600 dark:text-sky-400 mb-2" />
+                            <span className="font-bold text-gray-900 dark:text-gray-100 block">Manage Staff</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Edit roles, reset passwords</span>
                         </button>
-                        <button onClick={() => setActiveTab('reports')} className="p-4 rounded-xl bg-gray-50 hover:bg-gray-100 text-left transition-colors">
-                            <FileText className="h-6 w-6 text-gray-700 mb-2" />
-                            <span className="font-bold text-gray-900 block">View Reports</span>
-                            <span className="text-xs text-gray-500">Generate summaries</span>
+                        <button onClick={() => setActiveTab('reports')} className="p-4 rounded-xl bg-sky-50/60 dark:bg-sky-500/10 hover:bg-sky-50 dark:hover:bg-sky-500/20 text-left transition-colors">
+                            <FileText className="h-6 w-6 text-sky-600 dark:text-sky-400 mb-2" />
+                            <span className="font-bold text-gray-900 dark:text-gray-100 block">View Reports</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Generate summaries</span>
                         </button>
-                    <Link href="/admin-setup/import-staff" className="p-4 rounded-xl bg-gray-50 hover:bg-gray-100 text-left transition-colors">
-                      <Database className="h-6 w-6 text-gray-700 mb-2" />
-                      <span className="font-bold text-gray-900 block">Bulk Upload</span>
-                      <span className="text-xs text-gray-500">Import staff from Excel</span>
+                    <Link href="/admin-setup/import-staff" className="p-4 rounded-xl bg-sky-50/60 dark:bg-sky-500/10 hover:bg-sky-50 dark:hover:bg-sky-500/20 text-left transition-colors">
+                      <Database className="h-6 w-6 text-sky-600 dark:text-sky-400 mb-2" />
+                      <span className="font-bold text-gray-900 dark:text-gray-100 block">Bulk Upload</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Import staff from Excel</span>
                     </Link>
                      </div>
                  </div>
             </div>
-            
+
           </div>
         )}
 
@@ -546,7 +536,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
             <div className="space-y-8">
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">Staff List</h2>
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Staff List</h2>
                   <p className="text-gray-500 mt-1">Browse all staff members, review category totals, and filter the school directory.</p>
                 </div>
                 <div className="bg-[#FDFBF7] border border-gray-100 rounded-2xl px-5 py-4">
@@ -558,7 +548,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 <div className="rounded-3xl border border-gray-100 bg-[#FAE29F] p-5 shadow-sm">
                   <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Total Staff</p>
-                  <p className="mt-3 text-3xl font-bold text-gray-900">{staffUsers.length}</p>
+                  <p className="mt-3 text-3xl font-bold text-gray-900 dark:text-gray-100">{staffUsers.length}</p>
                 </div>
                 {JOB_CATEGORIES.map((category) => (
                   <button
@@ -808,7 +798,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold text-gray-900">Manage Staff</h2>
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Manage Staff</h2>
                     <p className="text-gray-500 mt-1">View and manage all registered users in the system.</p>
                 </div>
                 <div className="flex space-x-3">
@@ -900,7 +890,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                                      <button
                                       onClick={() => setEditingUser(user)}
                                       disabled={!!actionLoading}
-                                      className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"
+                                      className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm"
                                       title="Edit User"
                                     >
                                      <Edit className="h-4 w-4" />
@@ -948,7 +938,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
           ) : activeTab === 'requests' ? (
             <div className="flex flex-col">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Deletion Requests</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Deletion Requests</h2>
               </div>
 
               {message && (
@@ -1035,7 +1025,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
             <div className="space-y-8">
               <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-3xl font-bold text-gray-900">Appraisal Management</h2>
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Appraisal Management</h2>
                     <p className="text-gray-500 mt-1">Track precision, progress, and performance across all departments.</p>
                 </div>
               </div>
@@ -1148,7 +1138,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                                 {appraisal.status !== 'DRAFT' && (
                                   <button
                                     onClick={() => window.open(`/dashboard/appraisal/${appraisal.appraisee_id}?appraisalId=${appraisal.id}&view=SCORESHEET&hideBack=true`, '_blank')}
-                                    className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm flex items-center"
+                                    className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm flex items-center"
                                     title="View Final Scoresheet"
                                   >
                                     <Eye className="h-4 w-4" />
@@ -1181,12 +1171,12 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
             <div className="space-y-8">
               <div className="flex justify-between items-center print:hidden">
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">Appraisal Reports</h2>
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Appraisal Reports</h2>
                   <p className="text-gray-500 mt-1">Generate and print comprehensive performance summaries.</p>
                 </div>
                 <button
                   onClick={() => window.print()}
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition-all shadow-indigo-200"
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-bold rounded-xl shadow-sm text-white bg-brand-600 hover:bg-brand-700 focus:outline-none transition-all shadow-brand-200"
                 >
                   <FileText className="h-5 w-5 mr-2" />
                   Print Official Summary
@@ -1240,7 +1230,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                               <tr key={`${user.id}-${role}`} className="hover:bg-gray-50/50 transition-colors cursor-default">
                                 <td className="px-8 py-5 whitespace-nowrap">
                                     <div className="flex items-center">
-                                        <div className="h-8 w-8 shrink-0 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xs mr-3">
+                                        <div className="h-8 w-8 shrink-0 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-xs mr-3">
                                             {user.full_name?.charAt(0) || '?'}
                                         </div>
                                         <span className="text-sm font-bold text-gray-900">{user.full_name}</span>
@@ -1285,7 +1275,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                                   {userAppraisal && userAppraisal.status !== 'DRAFT' && (
                                     <button
                                       onClick={() => window.open(`/dashboard/appraisal/${user.id}?appraisalId=${userAppraisal.id}&view=SCORESHEET&hideBack=true`, '_blank')}
-                                      className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm flex items-center ml-auto"
+                                      className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm flex items-center ml-auto"
                                       title="View Final Scoresheet"
                                     >
                                       <Eye className="h-4 w-4" />
@@ -1302,12 +1292,12 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
               </div>
             </div>
           ) : activeTab === 'my_appraisals' ? (
-            <AppraiserContent currentUser={currentUser} initialTab="appraisals" />
+            <AppraiserContent currentUser={currentUser} initialTab="home" />
           ) : activeTab === 'settings' ? (
              <div className="space-y-8">
                 <div className="flex justify-between items-center">
                    <div>
-                      <h2 className="text-3xl font-bold text-gray-900">Settings</h2>
+                      <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Settings</h2>
                       <p className="text-gray-500 mt-1">Manage your account preferences and security.</p>
                    </div>
                 </div>
@@ -1342,7 +1332,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                                   value={newPassword}
                                   onChange={(e) => setNewPassword(e.target.value)}
                                   placeholder="Enter new password"
-                                  className="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm transition-all"
+                                  className="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent sm:text-sm transition-all"
                                 />
                             </div>
                             <div>
@@ -1353,7 +1343,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                                   value={confirmPassword}
                                   onChange={(e) => setConfirmPassword(e.target.value)}
                                   placeholder="Confirm new password"
-                                  className="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm transition-all"
+                                  className="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent sm:text-sm transition-all"
                                 />
                             </div>
                             
@@ -1361,7 +1351,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                                 <button
                                   type="submit"
                                   disabled={updatingPassword}
-                                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all shadow-indigo-200"
+                                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 transition-all shadow-brand-200"
                                 >
                                   {updatingPassword ? (
                                      <>
@@ -1443,11 +1433,11 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                       <div className="mt-4 space-y-4">
                         <div>
                           <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name</label>
-                          <input type="text" name="fullName" id="fullName" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white" />
+                          <input type="text" name="fullName" id="fullName" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm text-gray-900 bg-white" />
                         </div>
                         <div>
                           <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                          <input type="email" name="email" id="email" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white" />
+                          <input type="email" name="email" id="email" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm text-gray-900 bg-white" />
                         </div>
                         <div>
                           <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
@@ -1459,7 +1449,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                               required 
                               readOnly
                               value={generatedPassword}
-                              className="focus:ring-blue-500 focus:border-blue-500 flex-1 block w-full rounded-md sm:text-sm border-gray-300 bg-gray-50 text-gray-900 px-3 py-2 pr-10" 
+                              className="focus:ring-brand-500 focus:border-brand-500 flex-1 block w-full rounded-md sm:text-sm border-gray-300 bg-gray-50 text-gray-900 px-3 py-2 pr-10" 
                             />
                             <button
                               type="button"
@@ -1479,7 +1469,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                         </div>
                         <div>
                           <label htmlFor="role" className="block text-sm font-medium text-gray-700">System Role</label>
-                          <select name="role" id="role" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white">
+                          <select name="role" id="role" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm text-gray-900 bg-white">
                             {ROLES.filter(role => role !== 'DIRECTOR' || isSuperAdmin).map(role => (
                               <option key={role} value={role}>{role}</option>
                             ))}
@@ -1487,7 +1477,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                         </div>
                         <div>
                           <label htmlFor="additionalRoles" className="block text-sm font-medium text-gray-700">Additional Roles</label>
-                          <select name="additionalRoles" id="additionalRoles" multiple className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white h-32">
+                          <select name="additionalRoles" id="additionalRoles" multiple className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm text-gray-900 bg-white h-32">
                             {ROLES.filter(role => role !== 'SUPER ADMIN' && role !== 'DIRECTOR').map(role => (
                               <option key={role} value={role}>{role}</option>
                             ))}
@@ -1496,7 +1486,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                         </div>
                         <div>
                           <label htmlFor="jobCategory" className="block text-sm font-medium text-gray-700">Job Category</label>
-                          <select name="jobCategory" id="jobCategory" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white">
+                          <select name="jobCategory" id="jobCategory" required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm text-gray-900 bg-white">
                             <option value="">Select Category</option>
                             {JOB_CATEGORIES.map(cat => (
                               <option key={cat} value={cat}>{JOB_CATEGORY_LABELS[cat]}</option>
@@ -1508,10 +1498,10 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                   </div>
                 </div>
                 <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-                  <button type="submit" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                  <button type="submit" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-brand-600 text-base font-medium text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:ml-3 sm:w-auto sm:text-sm">
                     Create User
                   </button>
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                     Cancel
                   </button>
                 </div>
@@ -1534,7 +1524,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                       <div className="mt-4 space-y-4">
                         <div>
                           <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700">System Role</label>
-                          <select name="role" id="edit-role" defaultValue={editingUser.role} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white">
+                          <select name="role" id="edit-role" defaultValue={editingUser.role} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm text-gray-900 bg-white">
                             {ROLES.filter(role => role !== 'DIRECTOR' || isSuperAdmin).map(role => (
                               <option key={role} value={role}>{role}</option>
                             ))}
@@ -1542,7 +1532,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                         </div>
                         <div>
                           <label htmlFor="edit-additionalRoles" className="block text-sm font-medium text-gray-700">Additional Roles</label>
-                          <select name="additionalRoles" id="edit-additionalRoles" multiple defaultValue={(editingUser.roles || []).filter(r => r !== editingUser.role)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white h-32">
+                          <select name="additionalRoles" id="edit-additionalRoles" multiple defaultValue={(editingUser.roles || []).filter(r => r !== editingUser.role)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm text-gray-900 bg-white h-32">
                             {ROLES.filter(role => role !== 'SUPER ADMIN' && role !== 'DIRECTOR').map(role => (
                               <option key={role} value={role}>{role}</option>
                             ))}
@@ -1551,7 +1541,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                         </div>
                         <div>
                           <label htmlFor="edit-jobCategory" className="block text-sm font-medium text-gray-700">Job Category</label>
-                          <select name="jobCategory" id="edit-jobCategory" defaultValue={editingUser.job_category} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 bg-white">
+                          <select name="jobCategory" id="edit-jobCategory" defaultValue={editingUser.job_category} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm text-gray-900 bg-white">
                             <option value="">Select Category</option>
                             {JOB_CATEGORIES.map(cat => (
                               <option key={cat} value={cat}>{JOB_CATEGORY_LABELS[cat]}</option>
@@ -1563,10 +1553,10 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                   </div>
                 </div>
                 <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-                  <button type="submit" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                  <button type="submit" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-brand-600 text-base font-medium text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:ml-3 sm:w-auto sm:text-sm">
                     Update User
                   </button>
-                  <button type="button" onClick={() => setEditingUser(null)} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                  <button type="button" onClick={() => setEditingUser(null)} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                     Cancel
                   </button>
                 </div>
@@ -1597,7 +1587,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                               type="text" 
                               readOnly
                               value={resetPasswordResult.password}
-                              className="focus:ring-blue-500 focus:border-blue-500 flex-1 block w-full rounded-md sm:text-sm border-gray-300 bg-gray-50 text-gray-900 px-3 py-2 pr-10" 
+                              className="focus:ring-brand-500 focus:border-brand-500 flex-1 block w-full rounded-md sm:text-sm border-gray-300 bg-gray-50 text-gray-900 px-3 py-2 pr-10" 
                             />
                             <button
                               type="button"
@@ -1622,7 +1612,7 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
               <button 
                 type="button" 
                 onClick={() => setResetPasswordResult(null)}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-brand-600 text-base font-medium text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:ml-3 sm:w-auto sm:text-sm"
               >
                 Close
               </button>

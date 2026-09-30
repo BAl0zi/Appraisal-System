@@ -673,13 +673,13 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center">
             {!hideBack && (
-              <button onClick={() => router.back()} className="mr-4 text-gray-500 hover:text-gray-700" aria-label="Go back">
+              <button onClick={() => router.back()} className="mr-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" aria-label="Go back">
                 <ArrowLeft className="h-6 w-6" />
               </button>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Appraisal Dashboard</h1>
-              <p className="text-sm text-gray-500">Appraising: <span className="font-medium text-gray-900">{appraisee.full_name}</span> ({effectiveRole})</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Appraisal Dashboard</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Appraising: <span className="font-medium text-gray-900 dark:text-gray-100">{appraisee.full_name}</span> ({effectiveRole})</p>
               <p className="text-xs text-gray-400">{formData.term} {formData.year}</p>
             </div>
           </div>
@@ -719,7 +719,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
               setObservationViewMode('FORM');
               setCurrentView('OBSERVATION');
             }}
-            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all group text-center relative"
+            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-brand-500 hover:shadow-md transition-all group text-center relative"
           >
             {formData.observation1?.status === 'COMPLETED' && (
               <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
@@ -727,8 +727,8 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                 {!isCompleted && <span onClick={(e) => { e.stopPropagation(); setActiveObservation('FIRST'); setObservationViewMode('FORM'); setCurrentView('OBSERVATION'); }} className="ml-2 text-blue-500 hover:text-blue-700 underline text-[10px] cursor-pointer normal-case">Edit</span>}
               </div>
             )}
-            <div className="p-4 bg-purple-50 rounded-full mb-4 group-hover:bg-purple-100">
-              <Eye className="h-8 w-8 text-purple-600" />
+            <div className="p-4 bg-brand-50 rounded-full mb-4 group-hover:bg-brand-100">
+              <Eye className="h-8 w-8 text-brand-700" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">{isCoach ? 'Coach Observation' : isTeachingStaff ? 'First Lesson Observation' : 'First Work Observation'}</h3>
             <p className="text-sm text-gray-500 mt-2">{isCoach ? 'Record observation and feedback.' : 'Record first observation and feedback.'}</p>
@@ -743,7 +743,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
               setObservationViewMode('FORM');
               setCurrentView('OBSERVATION');
             }}
-            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all group text-center relative"
+            className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-brand-500 hover:shadow-md transition-all group text-center relative"
           >
             {formData.observation2?.status === 'COMPLETED' && (
               <div className="absolute top-4 right-4 text-green-500 flex items-center text-xs font-bold uppercase tracking-wider">
@@ -751,8 +751,8 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                 {!isCompleted && <span onClick={(e) => { e.stopPropagation(); setActiveObservation('SECOND'); setObservationViewMode('FORM'); setCurrentView('OBSERVATION'); }} className="ml-2 text-blue-500 hover:text-blue-700 underline text-[10px] cursor-pointer normal-case">Edit</span>}
               </div>
             )}
-            <div className="p-4 bg-purple-50 rounded-full mb-4 group-hover:bg-purple-100">
-              <Eye className="h-8 w-8 text-purple-600" />
+            <div className="p-4 bg-brand-50 rounded-full mb-4 group-hover:bg-brand-100">
+              <Eye className="h-8 w-8 text-brand-700" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">{isTeachingStaff ? 'Second Lesson Observation' : 'Second Work Observation'}</h3>
             <p className="text-sm text-gray-500 mt-2">Record second observation and feedback.</p>
@@ -801,7 +801,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                 <button
                   type="button"
                   onClick={() => handleSubmit('OBSERVATION_SUBMITTED')}
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
                   disabled={loading}
                 >
                   {loading ? 'Submitting...' : 'Submit All Observations & Proceed to Evaluation'}
@@ -826,18 +826,18 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
       <div className="mb-8 flex items-center justify-between print:hidden">
         <div className="flex items-center">
           {!hideBack && (
-            <button onClick={() => setCurrentView('MENU')} className="mr-4 text-gray-500 hover:text-gray-700" aria-label="Back to Menu">
+            <button onClick={() => setCurrentView('MENU')} className="mr-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" aria-label="Back to Menu">
               <ArrowLeft className="h-6 w-6" />
             </button>
           )}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {currentView === 'TARGETS' && 'Setting Targets'}
               {currentView === 'OBSERVATION' && (isTeachingStaff ? 'Lesson Observation' : 'Work Observation')}
               {currentView === 'EVALUATION' && 'Employee Evaluation'}
               {currentView === 'SCORESHEET' && 'Final Scoresheet'}
             </h1>
-            <p className="text-sm text-gray-500">Appraising: <span className="font-medium text-gray-900">{appraisee.full_name}</span></p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Appraising: <span className="font-medium text-gray-900 dark:text-gray-100">{appraisee.full_name}</span></p>
           </div>
         </div>
         <div className="flex items-center space-x-4">
@@ -845,7 +845,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
             <button
               onClick={handleDownloadFullReport}
               title="Download the full appraisal report as a PDF"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
             >
               <Download className="h-4 w-4 mr-2" />
               Download Appraisal
@@ -855,7 +855,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
             <button
               onClick={() => handleSubmit(existingAppraisal?.status || 'DRAFT')}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
             >
               <Save className="h-4 w-4 mr-2" />
               Save Progress
@@ -930,7 +930,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                 </p>
               </div>
               {!isCompleted && (
-                <button onClick={addTarget} className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200">
+                <button onClick={addTarget} className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-brand-700 bg-brand-100 hover:bg-brand-200">
                   <Plus className="h-4 w-4 mr-1" /> Add Target
                 </button>
               )}
@@ -968,7 +968,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                   setFormData({ ...formData, targets: newTargets });
                                 }}
                                 disabled={isCompleted}
-                                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white font-bold"
+                                className="shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white font-bold"
                                 placeholder="Area of focus"
                               />
                               <textarea
@@ -981,7 +981,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                 }}
                                 disabled={isCompleted}
                                 rows={2}
-                                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-xs border-gray-300 rounded-md disabled:bg-gray-100 text-gray-600 bg-white"
+                                className="shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-xs border-gray-300 rounded-md disabled:bg-gray-100 text-gray-600 bg-white"
                                 placeholder="Description of the target..."
                               />
                             </div>
@@ -997,7 +997,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                 setFormData({ ...formData, targets: newTargets });
                               }}
                               disabled={isCompleted}
-                              className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
+                              className="shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
                               placeholder="Target (%)"
                             />
                           </td>
@@ -1012,7 +1012,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                 setFormData({ ...formData, targets: newTargets });
                               }}
                               disabled={!isTargetsSet || isCompleted}
-                              className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
+                              className="shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 text-gray-900 bg-white"
                               placeholder={!isTargetsSet ? "Set targets first" : "Actual (%)"}
                             />
                           </td>
@@ -1027,7 +1027,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                 }}
                                 disabled={!isTargetsSet || isCompleted}
                                 rows={3}
-                                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-xs border-gray-300 rounded-md disabled:bg-gray-100 text-gray-600 bg-white"
+                                className="shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-xs border-gray-300 rounded-md disabled:bg-gray-100 text-gray-600 bg-white"
                                 placeholder={!isTargetsSet ? "Set targets first" : "Explain why target was reached or not..."}
                               />
                           </td>
@@ -1183,7 +1183,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
               type="button"
               onClick={() => handleSubmit(existingAppraisal?.status || 'DRAFT')}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50"
             >
               {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
               {loading ? 'Saving...' : 'Save Draft'}
@@ -1193,7 +1193,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
               <button
                 type="button"
                 onClick={() => handleSubmit('TARGETS_SET')}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading || isCompleted}
               >
                 {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
@@ -1219,7 +1219,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                 onClick={() => {
                   handleSubmit(existingAppraisal?.status || 'DRAFT').then(() => setCurrentView('MENU'));
                 }}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
                 {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
@@ -1251,7 +1251,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                 </div>
                 <button
                   onClick={() => setCurrentView('MENU')}
-                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
                 >
                   Back to Menu
                 </button>
@@ -1276,7 +1276,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         });
                       }}
                       disabled={isCompleted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
+                      className="mt-1 shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1295,7 +1295,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         });
                       }}
                       disabled={isCompleted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
+                      className="mt-1 shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1314,7 +1314,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         });
                       }}
                       disabled={isCompleted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
+                      className="mt-1 shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1333,7 +1333,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         });
                       }}
                       disabled={isCompleted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
+                      className="mt-1 shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1352,7 +1352,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         });
                       }}
                       disabled={isCompleted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
+                      className="mt-1 shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1371,7 +1371,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         });
                       }}
                       disabled={isCompleted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
+                      className="mt-1 shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
                 </div>
@@ -1397,7 +1397,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         });
                       }}
                       disabled={isCompleted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
+                      className="mt-1 shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1416,7 +1416,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         });
                       }}
                       disabled={isCompleted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
+                      className="mt-1 shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
 
@@ -1435,7 +1435,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                         });
                       }}
                       disabled={isCompleted}
-                      className="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
+                      className="mt-1 shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border text-gray-900 bg-white"
                     />
                   </div>
                 </div>
@@ -1468,7 +1468,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                               checked={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.ratings?.[index] === rating}
                               onChange={() => handleObservationRating(index, rating)}
                               disabled={isCompleted}
-                              className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 disabled:opacity-50"
+                              className="focus:ring-brand-500 h-4 w-4 text-brand-600 border-gray-300 disabled:opacity-50"
                               aria-label={`Rating ${rating} for parameter ${index + 1}`}
                             />
                           </td>
@@ -1491,9 +1491,9 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                       <td className="px-2 py-4 text-center">{(activeObservation === 'FIRST' ? observationStats.counts1 : observationStats.counts2)[3] * 3}</td>
                       <td className="px-2 py-4 text-center">{(activeObservation === 'FIRST' ? observationStats.counts1 : observationStats.counts2)[4] * 4}</td>
                     </tr>
-                    <tr className="bg-blue-50 border-t-2 border-blue-200">
-                      <td className="px-6 py-4 text-right font-bold text-blue-900">TOTAL SCORE ({activeObservation} OBSERVATION)</td>
-                      <td colSpan={4} className="px-6 py-4 text-center font-bold text-xl text-blue-600">
+                    <tr className="bg-brand-50 border-t-2 border-brand-200">
+                      <td className="px-6 py-4 text-right font-bold text-brand-900">TOTAL SCORE ({activeObservation} OBSERVATION)</td>
+                      <td colSpan={4} className="px-6 py-4 text-center font-bold text-xl text-brand-700">
                         {activeObservation === 'FIRST' ? observationStats.score1 : observationStats.score2}
                       </td>
                     </tr>
@@ -1534,7 +1534,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                                 checked={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.documents?.[index] === status}
                                 onChange={() => handleDocumentRating(index, status)}
                                 disabled={isCompleted}
-                                className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 disabled:opacity-50"
+                                className="focus:ring-brand-500 h-4 w-4 text-brand-600 border-gray-300 disabled:opacity-50"
                                 aria-label={`${status.replace('_', ' ')} for document ${index + 1}`}
                               />
                             </td>
@@ -1555,7 +1555,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
             <div className="px-4 py-5 sm:p-6">
               <textarea
                 rows={4}
-                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
+                className="shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
                 placeholder="Enter any additional observations here..."
                 value={formData[activeObservation === 'FIRST' ? 'observation1' : 'observation2']?.comments || ''}
                 onChange={(e) => {
@@ -1577,7 +1577,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                     type="button"
                     onClick={() => handleSubmit(existingAppraisal?.status || 'DRAFT')}
                     disabled={loading}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50"
                   >
                     {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                     {loading ? 'Saving...' : 'Save Draft'}
@@ -1601,7 +1601,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                       onClick={() => {
                         handleSubmit(existingAppraisal?.status || 'DRAFT').then(() => setCurrentView('MENU'));
                       }}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={loading}
                     >
                       {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
@@ -1656,7 +1656,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                               checked={formData.evaluation?.ratings?.[index] === rating}
                               onChange={() => handleEvaluationRating(index, rating)}
                               disabled={isCompleted}
-                              className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 disabled:opacity-50"
+                              className="focus:ring-brand-500 h-4 w-4 text-brand-600 border-gray-300 disabled:opacity-50"
                               aria-label={`Rating ${rating} for parameter ${index + 1}`}
                             />
                           </td>
@@ -1701,7 +1701,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                 <div className="space-y-3">
                   <input
                     type="text"
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
+                    className="shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
                     placeholder="1."
                     value={formData.evaluation?.progressComments?.[0] || ''}
                     onChange={(e) => {
@@ -1716,7 +1716,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                   />
                   <input
                     type="text"
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
+                    className="shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
                     placeholder="2."
                     value={formData.evaluation?.progressComments?.[1] || ''}
                     onChange={(e) => {
@@ -1737,7 +1737,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                 <div className="space-y-3">
                   <input
                     type="text"
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
+                    className="shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
                     placeholder="1."
                     value={formData.evaluation?.improvementComments?.[0] || ''}
                     onChange={(e) => {
@@ -1752,7 +1752,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                   />
                   <input
                     type="text"
-                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
+                    className="shadow-sm focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2 text-gray-900 bg-white"
                     placeholder="2."
                     value={formData.evaluation?.improvementComments?.[1] || ''}
                     onChange={(e) => {
@@ -1788,7 +1788,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                   handleSubmit(existingAppraisal?.status || 'DRAFT').then(() => setCurrentView('MENU'));
                 }}
                 disabled={loading}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 {loading ? 'Saving...' : 'Done Editing'}
@@ -1874,31 +1874,31 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
                   <div className="space-y-2 print:space-y-1">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 print:text-xs">Leading (93%-100%)</span>
-                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Leading' ? 'bg-blue-600 border-blue-600' : ''} print:w-4 print:h-4`}>
+                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Leading' ? 'bg-brand-600 border-brand-600' : ''} print:w-4 print:h-4`}>
                         {currentRating === 'Leading' && <span className="text-white text-xs">✓</span>}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 print:text-xs">Strong (80%-92%)</span>
-                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Strong' ? 'bg-blue-600 border-blue-600' : ''} print:w-4 print:h-4`}>
+                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Strong' ? 'bg-brand-600 border-brand-600' : ''} print:w-4 print:h-4`}>
                         {currentRating === 'Strong' && <span className="text-white text-xs">✓</span>}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 print:text-xs">Solid (65%-79%)</span>
-                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Solid' ? 'bg-blue-600 border-blue-600' : ''} print:w-4 print:h-4`}>
+                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Solid' ? 'bg-brand-600 border-brand-600' : ''} print:w-4 print:h-4`}>
                         {currentRating === 'Solid' && <span className="text-white text-xs">✓</span>}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 print:text-xs">Building (50%-64%)</span>
-                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Building' ? 'bg-blue-600 border-blue-600' : ''} print:w-4 print:h-4`}>
+                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Building' ? 'bg-brand-600 border-brand-600' : ''} print:w-4 print:h-4`}>
                         {currentRating === 'Building' && <span className="text-white text-xs">✓</span>}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 print:text-xs">Below Expectations (&lt;49%)</span>
-                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Below Expectations' ? 'bg-blue-600 border-blue-600' : ''} print:w-4 print:h-4`}>
+                      <div className={`w-6 h-6 border-2 border-gray-400 rounded flex items-center justify-center ${currentRating === 'Below Expectations' ? 'bg-brand-600 border-brand-600' : ''} print:w-4 print:h-4`}>
                         {currentRating === 'Below Expectations' && <span className="text-white text-xs">✓</span>}
                       </div>
                     </div>
@@ -1907,7 +1907,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
 
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col justify-center items-center text-center print:p-2">
                   <h4 className="text-sm font-bold text-gray-700 mb-2 uppercase">Current Term Score</h4>
-                  <div className="text-4xl font-bold text-blue-600 mb-2 print:text-2xl">{percentage.toFixed(1)}%</div>
+                  <div className="text-4xl font-bold text-brand-700 mb-2 print:text-2xl">{percentage.toFixed(1)}%</div>
                   <p className="text-sm text-gray-500 print:text-xs">Based on Termly Total: {totalScore} / {maxScores.totalMax}</p>
                 </div>
               </div>

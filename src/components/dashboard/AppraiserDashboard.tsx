@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { LayoutDashboard, FileText, Settings, Users, ClipboardList, Award } from 'lucide-react';
+import { LayoutDashboard, Settings, Users, ClipboardList, Award } from 'lucide-react';
 import AppraiserContent from './AppraiserContent';
 import DashboardLayout from './DashboardLayout';
 import TeamPerformance from './TeamPerformance';
@@ -17,7 +17,10 @@ interface AppraiserDashboardProps {
 }
 
 export default function AppraiserDashboard({ currentUser, initialTab, role }: AppraiserDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'home' | 'appraisals' | 'team_performance' | 'assignments' | 'my_record' | 'settings'>((initialTab as any) || 'home');
+  const [activeTab, setActiveTab] = useState<'home' | 'team_performance' | 'assignments' | 'my_record' | 'settings'>(
+    // Old bookmarks/links may still point at the removed "appraisals" tab, which is now folded into "home"
+    (initialTab === 'appraisals' ? 'home' : (initialTab as any)) || 'home'
+  );
   const searchParams = useSearchParams();
   const term = searchParams?.get('term');
 
@@ -26,7 +29,6 @@ export default function AppraiserDashboard({ currentUser, initialTab, role }: Ap
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard?tab=home', icon: LayoutDashboard, current: activeTab === 'home', onClick: () => setActiveTab('home') },
-    { name: 'My Appraisals', href: '/dashboard?tab=appraisals', icon: FileText, current: activeTab === 'appraisals', onClick: () => setActiveTab('appraisals') },
     { name: 'My Appraisal Record', href: '/dashboard?tab=my_record', icon: Award, current: activeTab === 'my_record', onClick: () => setActiveTab('my_record') },
     { name: 'Team Performance', href: '/dashboard?tab=team_performance', icon: Users, current: activeTab === 'team_performance', onClick: () => setActiveTab('team_performance') },
     ...(canManageAssignments ? [{ name: 'Appraisal Assignments', href: '/dashboard?tab=assignments', icon: ClipboardList, current: activeTab === 'assignments', onClick: () => setActiveTab('assignments') }] : []),
@@ -45,7 +47,7 @@ export default function AppraiserDashboard({ currentUser, initialTab, role }: Ap
         <AssignmentManagerPanel />
       ) : (
         (() => {
-          const tabForContent: 'home' | 'appraisals' | 'settings' = (effectiveTab as 'home' | 'appraisals' | 'settings');
+          const tabForContent: 'home' | 'settings' = (effectiveTab as 'home' | 'settings');
           return <AppraiserContent currentUser={currentUser} currentTab={tabForContent} />;
         })()
       )}

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { ROLES, UserRole } from '@/constants/roles';
-import { Check, ChevronDown, Loader2, Lock, Mail, Shield } from 'lucide-react';
+import { Check, ChevronDown, Loader2, Lock, Mail } from 'lucide-react';
 import clsx from 'clsx';
 import PasswordInput from '@/components/PasswordInput';
 
@@ -69,11 +69,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 w-full">
+    <div className="min-h-screen bg-gradient-to-br from-[#06402b] via-[#0d5438] to-[#1a6b48] flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 w-full">
       <div className="mx-auto w-full max-w-md sm:max-w-md my-auto flex flex-col justify-center items-center">
         <div className="flex justify-center w-full">
-          <div className="h-16 w-16 bg-white/10 backdrop-blur-lg rounded-2xl flex items-center justify-center shadow-xl border border-white/20">
-            <Shield className="h-10 w-10 text-white" />
+          <div className="inline-flex items-center justify-center bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 px-6 py-4">
+            <img src="/logo.svg" alt="Urafiki Carovana School" className="h-14 w-auto" />
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight w-full">
@@ -96,7 +96,7 @@ export default function LoginPage() {
               <div className="relative">
                 <button
                   type="button"
-                  className="relative w-full bg-gray-50 border border-gray-200 rounded-xl shadow-sm pl-4 pr-10 py-3 text-left cursor-default focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all hover:bg-white"
+                  className="relative w-full bg-gray-50 border border-gray-200 rounded-xl shadow-sm pl-4 pr-10 py-3 text-left cursor-default focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 sm:text-sm transition-all hover:bg-white"
                   onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                 >
                   <span className="block truncate text-gray-900">
@@ -151,7 +151,7 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border text-gray-900 bg-white"
+                  className="focus:ring-brand-500 focus:border-brand-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border text-gray-900 bg-white"
                   placeholder="you@school.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -171,7 +171,7 @@ export default function LoginPage() {
                 required
                 leftIcon={<Lock className="h-5 w-5 text-gray-400" aria-hidden="true" />}
                 wrapperClassName="mt-1 shadow-sm"
-                className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 border text-gray-900 bg-white"
+                className="focus:ring-brand-500 focus:border-brand-500 block w-full sm:text-sm border-gray-300 rounded-md py-2 border text-gray-900 bg-white"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -197,7 +197,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-[#06402b] to-[#0d5438] hover:from-[#043320] hover:to-[#06402b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
               >
                 {loading ? (
                   <>
