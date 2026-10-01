@@ -128,7 +128,11 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   const isObservationSubmitted = status === 'OBSERVATION_SUBMITTED' || isEvaluationSubmitted;
   const isTargetsSet = status === 'TARGETS_SET' || isObservationSubmitted;
   
-  const effectiveRole = appraisalRole || appraisee.role;
+  // Prefer the role stored on the appraisal record itself, since a multi-role appraisee
+  // (e.g. TEACHERS + HEAD OF PANELS) can have separate appraisals per role, and the URL's
+  // role param is only present when starting a brand-new appraisal, not when continuing
+  // one via ?appraisalId=.
+  const effectiveRole = existingAppraisal?.role || (appraisalRole && appraisalRole !== '' ? appraisalRole : appraisee.role);
   const roleCategory = getRoleCategory(effectiveRole as UserRole);
   const showTargets = roleCategory !== 'NON_TEACHING';
   const isTeachingStaff = roleCategory === 'TEACHING';
