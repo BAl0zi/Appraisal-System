@@ -7,8 +7,8 @@ import { Save, ArrowLeft, Target, Eye, ClipboardCheck, FileText, Plus, Trash2, D
 import SignatureInput from '../SignatureInput';
 import AppraisalReportDocument from '@/components/AppraisalReportDocument';
 import { getRoleCategory, UserRole } from '@/constants/roles';
-import { LESSON_OBSERVATION_PARAMETERS, WORK_OBSERVATION_PARAMETERS, COACH_OBSERVATION_PARAMETERS, PROFESSIONAL_DOCUMENTS } from '@/constants/observation-criteria';
-import { TEACHING_EVALUATION_PARAMETERS, NON_TEACHING_EVALUATION_PARAMETERS, SENIOR_LEADERSHIP_EVALUATION_PARAMETERS, INTERMEDIATE_LEADERSHIP_EVALUATION_PARAMETERS, FIRSTLINE_LEADERSHIP_EVALUATION_PARAMETERS } from '@/constants/evaluation-criteria';
+import { LESSON_OBSERVATION_PARAMETERS, WORK_OBSERVATION_PARAMETERS, COACH_OBSERVATION_PARAMETERS, PROFESSIONAL_DOCUMENTS, SNE_OBSERVATION_PARAMETERS } from '@/constants/observation-criteria';
+import { TEACHING_EVALUATION_PARAMETERS, NON_TEACHING_EVALUATION_PARAMETERS, SENIOR_LEADERSHIP_EVALUATION_PARAMETERS, INTERMEDIATE_LEADERSHIP_EVALUATION_PARAMETERS, FIRSTLINE_LEADERSHIP_EVALUATION_PARAMETERS, SNE_EVALUATION_PARAMETERS } from '@/constants/evaluation-criteria';
 
 interface Target {
   id: number;
@@ -136,6 +136,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   const roleCategory = getRoleCategory(effectiveRole as UserRole);
   const showTargets = roleCategory !== 'NON_TEACHING';
   const isTeachingStaff = roleCategory === 'TEACHING';
+  const isSNETeacher = effectiveRole === 'SPECIAL NEEDS TEACHER';
   const isCoach = effectiveRole === 'COACH';
   const isSeniorLeadership = roleCategory === 'SENIOR_LEADERSHIP' || roleCategory === 'DIRECTOR';
   const isIntermediateLeadership = roleCategory === 'INTERMEDIATE_LEADERSHIP';
@@ -145,6 +146,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
 
   // Helper to get correct evaluation parameters
   const getEvaluationParameters = () => {
+    if (isSNETeacher) return SNE_EVALUATION_PARAMETERS;
     if (isTeachingStaff) return TEACHING_EVALUATION_PARAMETERS;
     if (isSeniorLeadership) return SENIOR_LEADERSHIP_EVALUATION_PARAMETERS;
     if (isIntermediateLeadership) return INTERMEDIATE_LEADERSHIP_EVALUATION_PARAMETERS;
@@ -154,6 +156,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
 
   // Helper to get correct observation parameters
   const getObservationParameters = () => {
+    if (isSNETeacher) return SNE_OBSERVATION_PARAMETERS;
     return isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
   };
 

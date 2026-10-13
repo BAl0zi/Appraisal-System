@@ -1,3 +1,31 @@
+export const SNE_OBSERVATION_PARAMETERS = [
+  "Reviews the previous lesson/content related to the current lesson",
+  "States the objective of the current lesson",
+  "Demonstrates innovation and creativity in teaching",
+  "Quality of introduction: captivating/captures learners interest",
+  "Uses appropriate teaching methods (multisensory)",
+  "Teaches with lesson documents",
+  "Mastery of content",
+  "Summarizes the lesson by highlighting the key points",
+  "Covers the lesson within the stipulated time (starts/ends on time)",
+  "Is the teacher observant?",
+  "Is able to differentiate work and offer accommodation",
+  "Able to stimulate learners",
+  "Ensures all learners are engaged",
+  "Composure of learners",
+  "Moves in class to observe students work",
+  "No chorus answers/knowing students by name",
+  "Handles school resources with care and dignity",
+  "The class is tidy, clean and \"lively\"",
+  "Uses the correct language (professional, subject, etc)",
+  "Ensures neat work presentation, good state of books",
+  "Marks learners work",
+  "Uses appropriate teaching aids",
+  "Use of Individualised Education Plans (IEPs)",
+  "Follows the Dress Code",
+  "Creates a friendly and warm learning atmosphere"
+];
+
 export const LESSON_OBSERVATION_PARAMETERS = [
   "Reviews the previous lesson/content related to the current lesson",
   "States the objective of the current lesson",
