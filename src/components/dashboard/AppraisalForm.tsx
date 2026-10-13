@@ -136,13 +136,12 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   const roleCategory = getRoleCategory(effectiveRole as UserRole);
   const showTargets = roleCategory !== 'NON_TEACHING';
   const isTeachingStaff = roleCategory === 'TEACHING';
+  const isCoach = effectiveRole === 'COACH';
   const isSeniorLeadership = roleCategory === 'SENIOR_LEADERSHIP' || roleCategory === 'DIRECTOR';
   const isIntermediateLeadership = roleCategory === 'INTERMEDIATE_LEADERSHIP';
   const isFirstlineLeadership = roleCategory === 'FIRSTLINE_LEADERSHIP';
   const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING';
-  const isCoach = effectiveRole === 'COACH';
-  // Coaches only ever fill out a single observation, not First/Second rounds
-  const showSecondObservation = showObservations && !isCoach;
+  const showSecondObservation = showObservations;
 
   // Helper to get correct evaluation parameters
   const getEvaluationParameters = () => {
@@ -155,7 +154,6 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
 
   // Helper to get correct observation parameters
   const getObservationParameters = () => {
-    if (isCoach) return COACH_OBSERVATION_PARAMETERS;
     return isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
   };
 
@@ -734,8 +732,8 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
             <div className="p-4 bg-brand-50 rounded-full mb-4 group-hover:bg-brand-100">
               <Eye className="h-8 w-8 text-brand-700" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">{isCoach ? 'Coach Observation' : isTeachingStaff ? 'First Lesson Observation' : 'First Work Observation'}</h3>
-            <p className="text-sm text-gray-500 mt-2">{isCoach ? 'Record observation and feedback.' : 'Record first observation and feedback.'}</p>
+            <h3 className="text-lg font-semibold text-gray-900">{isTeachingStaff ? 'First Lesson Observation' : 'First Work Observation'}</h3>
+            <p className="text-sm text-gray-500 mt-2">Record first observation and feedback.</p>
           </button>
           )}
 
