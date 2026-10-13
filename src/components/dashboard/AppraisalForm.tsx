@@ -157,6 +157,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   // Helper to get correct observation parameters
   const getObservationParameters = () => {
     if (isSNETeacher) return SNE_OBSERVATION_PARAMETERS;
+    if (isCoach) return COACH_OBSERVATION_PARAMETERS;
     return isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
   };
 
