@@ -1,5 +1,5 @@
 
-import { supabaseAdmin } from '../src/lib/supabase-admin.ts';
+import { supabaseAdmin } from '../src/lib/supabase-admin';
 
 async function createCoachUser() {
   const userDetails = {
