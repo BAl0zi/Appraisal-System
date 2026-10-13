@@ -1,5 +1,5 @@
 
-import { supabaseAdmin } from '../src/lib/supabase-admin.ts';
+import { supabaseAdmin } from '../src/lib/supabase-admin';
 
 async function cleanupUsers() {
   const emailsToDelete = [
@@ -8,7 +8,8 @@ async function cleanupUsers() {
     'classteacher@school.edu',
     'sectionhead@school.edu',
     'panelhead@school.edu',
-    'multirole.user@school.edu'
+    'multirole.user@school.edu',
+    'specialneeds.teacher@school.edu'
   ];
 
   try {

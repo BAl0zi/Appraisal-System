@@ -1,5 +1,5 @@
 
-import { supabaseAdmin } from '../src/lib/supabase-admin.ts';
+import { supabaseAdmin } from '../src/lib/supabase-admin';
 
 async function run() {
   const defaultPassword = 'Password123!';
@@ -90,7 +90,7 @@ async function run() {
           console.log(`Successfully created and assigned: ${user.email}`);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Exception for ${user.email}: ${error.message}`);
     }
   }
