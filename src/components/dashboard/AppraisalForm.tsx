@@ -81,7 +81,8 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
       targets: [
         { id: 1, area: '', description: '', target: '', actual: '', actualDescription: '' }
       ],
-      // Migrate old single observation to observation1 if needed
+      ...data, 
+      // Migrate old single observation to observation1 if needed, and ensure they aren't overwritten by raw data
       observation1: data.observation1 || data.observation || defaultObs,
       observation2: data.observation2 || { ...defaultObs, observationType: 'SECOND' },
       evaluation: {
@@ -89,25 +90,30 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
         progressComments: ['', ''],
         improvementComments: ['', '']
       },
+      ...data.evaluation, 
       targetSignatures: {
         appraiseeSignature: '',
         appraiseeDate: '',
         appraiserSignature: '',
         appraiserDate: ''
       },
+      ...data.targetSignatures,
       targetReviewSignatures: {
         appraiseeSignature: '',
         appraiseeDate: '',
         appraiserSignature: '',
         appraiserDate: ''
       },
+      ...data.targetReviewSignatures,
       completionSignatures: {
         appraiseeSignature: '',
         appraiseeDate: '',
         appraiserSignature: '',
         appraiserDate: ''
       },
-      ...data // Overwrite with existing data, but ensure obs1/obs2 exist
+      ...data.completionSignatures,
+      // CRITICAL: Ensure the overall_score from the top-level existingAppraisal is also captured if it exists
+      overall_score: existingAppraisal?.overall_score || data.overall_score || null,
     };
   });
 
