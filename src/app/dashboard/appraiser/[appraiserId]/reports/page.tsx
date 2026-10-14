@@ -116,7 +116,7 @@ export default async function AppraiserReportsPage({ params, searchParams }: Pag
             const term = data.term || '';
             const year = data.year || '';
             const role = a.appraisee?.role || '';
-            const observationParams = (role && (role.includes('TEACH') || role === 'TEACHER')) ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+            const observationParams = (role && (role.toUpperCase().includes('TEACH') || role.toUpperCase() === 'TEACHER' || role.toUpperCase() === 'CLASS TEACHERS')) ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
             const evalParams = getEvalParamsForRole(role);
 
             return (

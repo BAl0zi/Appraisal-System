@@ -42,11 +42,12 @@ interface AppraisalFormProps {
   appraisalRole?: string;
   initialView?: string;
   hideBack?: boolean;
+  readOnly?: boolean;
 }
 
 type AppraisalView = 'MENU' | 'TARGETS' | 'OBSERVATION' | 'EVALUATION' | 'SCORESHEET';
 
-export default function AppraisalForm({ appraiserId, appraiser, appraisee, existingAppraisal, initialTerm, initialYear, appraisalRole, initialView, hideBack }: AppraisalFormProps) {
+export default function AppraisalForm({ appraiserId, appraiser, appraisee, existingAppraisal, initialTerm, initialYear, appraisalRole, initialView, hideBack, readOnly }: AppraisalFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [currentAppraisalId, setCurrentAppraisalId] = useState<string | undefined>(existingAppraisal?.id);
@@ -135,13 +136,13 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   const effectiveRole = existingAppraisal?.role || (appraisalRole && appraisalRole !== '' ? appraisalRole : appraisee.role);
   const roleCategory = getRoleCategory(effectiveRole as UserRole);
   const showTargets = roleCategory !== 'NON_TEACHING';
-  const isTeachingStaff = roleCategory === 'TEACHING';
+  const isTeachingStaff = roleCategory === 'TEACHING' || roleCategory === 'FIRSTLINE_LEADERSHIP';
   const isSNETeacher = effectiveRole === 'SPECIAL NEEDS TEACHER';
   const isCoach = effectiveRole === 'COACH';
   const isSeniorLeadership = roleCategory === 'SENIOR_LEADERSHIP' || roleCategory === 'DIRECTOR';
   const isIntermediateLeadership = roleCategory === 'INTERMEDIATE_LEADERSHIP';
   const isFirstlineLeadership = roleCategory === 'FIRSTLINE_LEADERSHIP';
-  const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING';
+  const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING' || roleCategory === 'FIRSTLINE_LEADERSHIP';
   const showSecondObservation = showObservations;
 
   // Helper to get correct evaluation parameters
@@ -158,7 +159,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   const getObservationParameters = () => {
     if (isSNETeacher) return SNE_OBSERVATION_PARAMETERS;
     if (isCoach) return COACH_OBSERVATION_PARAMETERS;
-    return isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+    return (isTeachingStaff || isFirstlineLeadership) ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
   };
 
   const evaluationParams = getEvaluationParameters();
@@ -857,7 +858,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
               Download Appraisal
             </button>
           )}
-          {!isCompleted && (
+          {!isCompleted && !readOnly && (
             <button
               onClick={() => handleSubmit(existingAppraisal?.status || 'DRAFT')}
               disabled={loading}
@@ -897,7 +898,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
           year={formData.year}
           showTargets={showTargets}
           showObservations={showObservations}
-          isTeachingStaff={isTeachingStaff}
+          isTeachingStaff={isTeachingStaff || isFirstlineLeadership}
           isCoach={isCoach}
           targets={formData.targets || []}
           observation1={formData.observation1}

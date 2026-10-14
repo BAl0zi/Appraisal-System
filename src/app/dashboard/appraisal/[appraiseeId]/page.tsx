@@ -11,7 +11,7 @@ interface PageProps {
 
 export default async function AppraisalPage({ params, searchParams }: PageProps) {
   const { appraiseeId } = await params;
-  const { term, year, appraisalId, role, view, hideBack } = await searchParams;
+  const { term, year, appraisalId, role, view, hideBack, readOnly } = await searchParams;
 
   // Get current user session
   const supabase = await createClient();
@@ -94,6 +94,7 @@ export default async function AppraisalPage({ params, searchParams }: PageProps)
         appraisalRole={role as string}
         initialView={view as string}
         hideBack={hideBack === 'true'}
+        readOnly={readOnly === 'true'}
       />
     </DashboardLayout>
   );

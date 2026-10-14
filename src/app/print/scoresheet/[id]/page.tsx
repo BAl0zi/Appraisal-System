@@ -18,9 +18,9 @@ interface PageProps {
   params: Promise<{ id: string }> | { id: string };
 }
 
-function getObservationParameters(isCoach: boolean, isTeachingStaff: boolean) {
+function getObservationParameters(isCoach: boolean, isTeachingStaff: boolean, isFirstlineLeadership: boolean) {
   if (isCoach) return COACH_OBSERVATION_PARAMETERS;
-  return isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+  return (isTeachingStaff || isFirstlineLeadership) ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
 }
 
 function getEvaluationParameters(roleCategory: string) {
@@ -112,9 +112,10 @@ export default async function PrintScoresheetPage({ params }: PageProps) {
   const roleCategory = getRoleCategory(role as UserRole);
   const isCoach = role === 'COACH';
   const isTeachingStaff = roleCategory === 'TEACHING';
+  const isFirstlineLeadership = roleCategory === 'FIRSTLINE_LEADERSHIP';
   const showTargets = roleCategory !== 'NON_TEACHING';
-  const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING';
-  const observationParams = getObservationParameters(isCoach, isTeachingStaff);
+  const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING' || roleCategory === 'FIRSTLINE_LEADERSHIP';
+  const observationParams = getObservationParameters(isCoach, isTeachingStaff, isFirstlineLeadership);
   const evaluationParams = getEvaluationParameters(roleCategory);
 
   // Target stats
@@ -170,7 +171,7 @@ export default async function PrintScoresheetPage({ params }: PageProps) {
         year={formData.year}
         showTargets={showTargets}
         showObservations={showObservations}
-        isTeachingStaff={isTeachingStaff}
+        isTeachingStaff={isTeachingStaff || isFirstlineLeadership}
         isCoach={isCoach}
         targets={targets}
         observation1={formData.observation1}

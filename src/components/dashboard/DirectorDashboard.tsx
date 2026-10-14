@@ -1135,15 +1135,13 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                             </td>
                             <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
                               <div className="flex justify-end space-x-2">
-                                {appraisal.status !== 'DRAFT' && (
-                                  <button
-                                    onClick={() => window.open(`/dashboard/appraisal/${appraisal.appraisee_id}?appraisalId=${appraisal.id}&view=SCORESHEET&hideBack=true`, '_blank')}
-                                    className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm flex items-center"
-                                    title="View Final Scoresheet"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </button>
-                                )}
+                                <button
+                                  onClick={() => window.open(`/dashboard/appraisal/${appraisal.appraisee_id}?appraisalId=${appraisal.id}&view=SCORESHEET&hideBack=true&readOnly=true`, '_blank')}
+                                  className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm flex items-center"
+                                  title="View Final Scoresheet"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
                                 {appraisal.status !== 'DRAFT' && (
                                   <button
                                     onClick={() => handleResetStatus(appraisal.id, 'DRAFT')}
@@ -1272,15 +1270,13 @@ export default function DirectorDashboard({ currentUser, initialTab }: DirectorD
                                     )}
                                 </td>
                                 <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium print:hidden">
-                                  {userAppraisal && userAppraisal.status !== 'DRAFT' && (
-                                    <button
-                                      onClick={() => window.open(`/dashboard/appraisal/${user.id}?appraisalId=${userAppraisal.id}&view=SCORESHEET&hideBack=true`, '_blank')}
-                                      className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm flex items-center ml-auto"
-                                      title="View Final Scoresheet"
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                    </button>
-                                  )}
+                                  <button
+                                    onClick={() => window.open(`/dashboard/appraisal/${user.id}?appraisalId=${userAppraisal.id}&view=SCORESHEET&hideBack=true&readOnly=true`, '_blank')}
+                                    className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm flex items-center ml-auto"
+                                    title="View Final Scoresheet"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </button>
                                 </td>
                               </tr>
                             );
