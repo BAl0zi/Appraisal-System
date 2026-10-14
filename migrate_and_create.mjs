@@ -98,6 +98,10 @@ async function migrateWithAutoCreate() {
       updatedTData.observation1 = ctData.observation1;
       changed = true;
     }
+    if (ctData.observation2 && Object.keys(ctData.observation2.ratings || {}).length > 0) {
+      updatedTData.observation2 = ctData.observation2;
+      changed = true;
+    }
     if (hasTargets) {
       updatedTData.targets = ctData.targets;
       changed = true;
@@ -120,6 +124,11 @@ async function migrateWithAutoCreate() {
       if (hasObservation) {
         cleanedCTData.observation1 = {
           ratings: {}, documents: {}, comments: '', observationType: 'FIRST', status: 'PENDING'
+        };
+      }
+      if (ctData.observation2 && Object.keys(ctData.observation2.ratings || {}).length > 0) {
+        cleanedCTData.observation2 = {
+          ratings: {}, documents: {}, comments: '', observationType: 'SECOND', status: 'PENDING'
         };
       }
       if (hasTargets) {
