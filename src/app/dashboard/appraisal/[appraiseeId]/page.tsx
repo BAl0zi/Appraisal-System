@@ -59,7 +59,7 @@ export default async function AppraisalPage({ params, searchParams }: PageProps)
       .contains('appraisal_data', { term, year });
 
     if (role) {
-      query = query.eq('role', role);
+      query = query.contains('appraisal_data', { role });
     }
 
     const { data } = await query.maybeSingle();
@@ -75,7 +75,7 @@ export default async function AppraisalPage({ params, searchParams }: PageProps)
       .limit(1);
 
     if (role) {
-      query = query.eq('role', role);
+      query = query.contains('appraisal_data', { role });
     }
 
     const { data } = await query.maybeSingle();

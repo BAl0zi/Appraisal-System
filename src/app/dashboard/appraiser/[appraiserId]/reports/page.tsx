@@ -3,7 +3,8 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import PrintButton from '@/components/PrintButton';
 import FinalScoresheetButton from '@/components/FinalScoresheetButton';
 import { LESSON_OBSERVATION_PARAMETERS, WORK_OBSERVATION_PARAMETERS } from '@/constants/observation-criteria';
-import { TEACHING_EVALUATION_PARAMETERS, NON_TEACHING_EVALUATION_PARAMETERS, SENIOR_LEADERSHIP_EVALUATION_PARAMETERS } from '@/constants/evaluation-criteria';
+import { TEACHING_EVALUATION_PARAMETERS, NON_TEACHING_EVALUATION_PARAMETERS, SENIOR_LEADERSHIP_EVALUATION_PARAMETERS, FIRSTLINE_LEADERSHIP_EVALUATION_PARAMETERS } from '@/constants/evaluation-criteria';
+import { getRoleCategory, type UserRole } from '@/constants/roles';
 
 interface PageProps {
   params: Promise<{ appraiserId: string }> | { appraiserId: string };
@@ -33,9 +34,31 @@ function renderObservationTable(params: string[], ratings: any) {
 
 function getEvalParamsForRole(role?: string) {
   if (!role) return NON_TEACHING_EVALUATION_PARAMETERS;
-  if (role.includes('TEACH') || role === 'TEACHER') return TEACHING_EVALUATION_PARAMETERS;
-  if (role === 'DIRECTOR' || role.includes('SENIOR')) return SENIOR_LEADERSHIP_EVALUATION_PARAMETERS;
+  const category = getRoleCategory(role as UserRole);
+  if (category === 'FIRSTLINE_LEADERSHIP') return FIRSTLINE_LEADERSHIP_EVALUATION_PARAMETERS;
+  if (category === 'TEACHING') return TEACHING_EVALUATION_PARAMETERS;
+  if (category === 'SENIOR_LEADERSHIP') return SENIOR_LEADERSHIP_EVALUATION_PARAMETERS;
   return NON_TEACHING_EVALUATION_PARAMETERS;
+}
+
+function sumRatings(ratings: Record<string, unknown> = {}) {
+  return Object.values(ratings).reduce<number>((total, value) => {
+    const rating = typeof value === 'string' ? Number.parseInt(value, 10) : Number(value);
+    return rating >= 1 && rating <= 4 ? total + rating : total;
+  }, 0);
+}
+
+function getTargetScore(targets: any[] = []) {
+  const completedTargets = targets
+    .map(target => ({ target: Number.parseFloat(target.target), actual: Number.parseFloat(target.actual) }))
+    .filter(target => target.target > 0 && Number.isFinite(target.actual));
+  if (completedTargets.length === 0) return 5;
+
+  const average = completedTargets.reduce((total, target) => total + target.actual / target.target * 100, 0) / completedTargets.length;
+  if (average >= 99) return 33;
+  if (average >= 95) return 30;
+  if (average >= 86) return 20;
+  return 5;
 }
 
 export default async function AppraiserReportsPage({ params, searchParams }: PageProps) {
@@ -115,16 +138,21 @@ export default async function AppraiserReportsPage({ params, searchParams }: Pag
             const data = a.appraisal_data || {};
             const term = data.term || '';
             const year = data.year || '';
-            const role = a.appraisee?.role || '';
-            const observationParams = (role && (role.toUpperCase().includes('TEACH') || role.toUpperCase() === 'TEACHER' || role.toUpperCase() === 'CLASS TEACHERS')) ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+            const role = a.role || data.role || a.appraisee?.role || '';
+            const roleCategory = getRoleCategory(role as UserRole);
+            const showTargets = roleCategory !== 'NON_TEACHING' && role !== 'SPECIAL NEEDS TEACHER';
+            const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING';
+            const observationParams = roleCategory === 'TEACHING' ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
             const evalParams = getEvalParamsForRole(role);
+            const leadershipTotal = getTargetScore(data.targets || []) + sumRatings(data.evaluation?.ratings || {});
+            const overallScore = roleCategory === 'FIRSTLINE_LEADERSHIP' ? leadershipTotal : a.overall_score ?? '-';
 
             return (
               <div key={a.id} id={`scoresheet-${a.id}`} className="mb-12 print:page-break-after-always avoid-break">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-xl font-bold">FINAL SCORESHEET</h2>
-                    <p className="text-sm">{a.appraisee?.full_name} - {a.appraisee?.role}</p>
+                    <p className="text-sm">{a.appraisee?.full_name} - {role}</p>
                     <p className="text-xs text-gray-500">{term} {year}</p>
                   </div>
                   <div className="space-x-2">
@@ -132,7 +160,8 @@ export default async function AppraiserReportsPage({ params, searchParams }: Pag
                   </div>
                 </div>
 
-                <h3 className="text-lg font-semibold mb-2">C1. WORK / LESSON OBSERVATION (FIRST)</h3>
+                {showObservations && <h3 className="text-lg font-semibold mb-2">C1. WORK / LESSON OBSERVATION (FIRST)</h3>}
+                {showObservations && <>
                 <div className="border p-4 mb-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div><strong>Appraisee:</strong> {a.appraisee?.full_name}</div>
@@ -146,8 +175,9 @@ export default async function AppraiserReportsPage({ params, searchParams }: Pag
                 </div>
 
                 {renderObservationTable(observationParams, data.observation1?.ratings)}
+                </>}
 
-                {data.observation2 && Object.keys(data.observation2?.ratings || {}).length > 0 && (
+                {showObservations && data.observation2 && Object.keys(data.observation2?.ratings || {}).length > 0 && (
                   <>
                     <h3 className="text-lg font-semibold mb-2">C2. WORK / LESSON OBSERVATION (SECOND)</h3>
                     <div className="border p-4 mb-4">
@@ -162,6 +192,7 @@ export default async function AppraiserReportsPage({ params, searchParams }: Pag
                   </>
                 )}
 
+                {showTargets && <>
                 <h3 className="text-lg font-semibold mb-2">D. TARGETS</h3>
                 <table className="w-full border-collapse border border-gray-200 mb-6">
                   <thead>
@@ -183,6 +214,7 @@ export default async function AppraiserReportsPage({ params, searchParams }: Pag
                     ))}
                   </tbody>
                 </table>
+                </>}
 
                 <h3 className="text-lg font-semibold mb-2">E. EVALUATION</h3>
                 <table className="w-full border-collapse border border-gray-200 mb-6">
@@ -193,7 +225,7 @@ export default async function AppraiserReportsPage({ params, searchParams }: Pag
                     </tr>
                   </thead>
                   <tbody>
-                    {getEvalParamsForRole(a.appraisee?.role).map((p: any, idx: number) => (
+                    {evalParams.map((p: any, idx: number) => (
                       <tr key={idx} className="odd:bg-white even:bg-gray-50">
                         <td className="p-3 border text-sm">{p}</td>
                         <td className="p-3 border text-sm text-right">{data.evaluation?.ratings?.[idx] ?? '-'}</td>
@@ -204,7 +236,7 @@ export default async function AppraiserReportsPage({ params, searchParams }: Pag
 
                 <div className="flex justify-between items-center">
                   <div>
-                    <p><strong>Overall Score:</strong> {a.overall_score ?? '-'}</p>
+                    <p><strong>Overall Score:</strong> {overallScore}</p>
                     <p className="text-sm text-gray-500">Status: {a.status}</p>
                   </div>
                 </div>

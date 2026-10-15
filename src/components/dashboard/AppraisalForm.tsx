@@ -139,16 +139,16 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   // (e.g. TEACHERS + HEAD OF PANELS) can have separate appraisals per role, and the URL's
   // role param is only present when starting a brand-new appraisal, not when continuing
   // one via ?appraisalId=.
-  const effectiveRole = existingAppraisal?.role || (appraisalRole && appraisalRole !== '' ? appraisalRole : appraisee.role);
+  const effectiveRole = existingAppraisal?.role || existingAppraisal?.appraisal_data?.role || (appraisalRole && appraisalRole !== '' ? appraisalRole : appraisee.role);
   const roleCategory = getRoleCategory(effectiveRole as UserRole);
-  const showTargets = roleCategory !== 'NON_TEACHING';
-  const isTeachingStaff = roleCategory === 'TEACHING' || roleCategory === 'FIRSTLINE_LEADERSHIP';
   const isSNETeacher = effectiveRole === 'SPECIAL NEEDS TEACHER';
+  const showTargets = roleCategory !== 'NON_TEACHING' && !isSNETeacher;
+  const isTeachingStaff = roleCategory === 'TEACHING';
   const isCoach = effectiveRole === 'COACH';
   const isSeniorLeadership = roleCategory === 'SENIOR_LEADERSHIP' || roleCategory === 'DIRECTOR';
   const isIntermediateLeadership = roleCategory === 'INTERMEDIATE_LEADERSHIP';
   const isFirstlineLeadership = roleCategory === 'FIRSTLINE_LEADERSHIP';
-  const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING' || roleCategory === 'FIRSTLINE_LEADERSHIP';
+  const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING';
   const showSecondObservation = showObservations;
 
   // Helper to get correct evaluation parameters
@@ -165,7 +165,7 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
   const getObservationParameters = () => {
     if (isSNETeacher) return SNE_OBSERVATION_PARAMETERS;
     if (isCoach) return COACH_OBSERVATION_PARAMETERS;
-    return (isTeachingStaff || isFirstlineLeadership) ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+    return isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
   };
 
   const evaluationParams = getEvaluationParameters();
@@ -898,13 +898,13 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
       {isPrintingFullReport && (
         <AppraisalReportDocument
           appraiseeName={appraisee.full_name}
-          appraiseeRole={appraisee.role}
+          appraiseeRole={effectiveRole}
           appraiserName={existingAppraisal?.appraiser_name || appraiser?.full_name || ''}
           term={formData.term}
           year={formData.year}
           showTargets={showTargets}
           showObservations={showObservations}
-          isTeachingStaff={isTeachingStaff || isFirstlineLeadership}
+          isTeachingStaff={isTeachingStaff}
           isCoach={isCoach}
           targets={formData.targets || []}
           observation1={formData.observation1}

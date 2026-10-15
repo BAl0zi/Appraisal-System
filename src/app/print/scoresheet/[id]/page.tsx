@@ -18,9 +18,9 @@ interface PageProps {
   params: Promise<{ id: string }> | { id: string };
 }
 
-function getObservationParameters(isCoach: boolean, isTeachingStaff: boolean, isFirstlineLeadership: boolean) {
+function getObservationParameters(isCoach: boolean, isTeachingStaff: boolean) {
   if (isCoach) return COACH_OBSERVATION_PARAMETERS;
-  return (isTeachingStaff || isFirstlineLeadership) ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
+  return isTeachingStaff ? LESSON_OBSERVATION_PARAMETERS : WORK_OBSERVATION_PARAMETERS;
 }
 
 function getEvaluationParameters(roleCategory: string) {
@@ -108,14 +108,15 @@ export default async function PrintScoresheetPage({ params }: PageProps) {
   }
 
   const formData = appraisal.appraisal_data || {};
-  const role = appraisal.appraisee?.role || '';
+  const role = appraisal.role || formData.role || appraisal.appraisee?.role || '';
   const roleCategory = getRoleCategory(role as UserRole);
+  const isSNETeacher = role === 'SPECIAL NEEDS TEACHER';
   const isCoach = role === 'COACH';
   const isTeachingStaff = roleCategory === 'TEACHING';
   const isFirstlineLeadership = roleCategory === 'FIRSTLINE_LEADERSHIP';
-  const showTargets = roleCategory !== 'NON_TEACHING';
-  const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING' || roleCategory === 'FIRSTLINE_LEADERSHIP';
-  const observationParams = getObservationParameters(isCoach, isTeachingStaff, isFirstlineLeadership);
+  const showTargets = roleCategory !== 'NON_TEACHING' && !isSNETeacher;
+  const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING';
+  const observationParams = getObservationParameters(isCoach, isTeachingStaff);
   const evaluationParams = getEvaluationParameters(roleCategory);
 
   // Target stats
@@ -156,7 +157,7 @@ export default async function PrintScoresheetPage({ params }: PageProps) {
   if (showObservations) computedTotal += observationTotal;
   computedTotal += evaluationTotal;
 
-  const totalScore = appraisal.overall_score ?? computedTotal;
+  const totalScore = isFirstlineLeadership || isSNETeacher ? computedTotal : appraisal.overall_score ?? computedTotal;
   const percentage = totalMax > 0 ? (totalScore / totalMax) * 100 : 0;
   const rating = getRating(percentage);
 
@@ -165,13 +166,13 @@ export default async function PrintScoresheetPage({ params }: PageProps) {
       <PrintPageToolbar />
       <AppraisalReportDocument
         appraiseeName={appraisal.appraisee?.full_name}
-        appraiseeRole={appraisal.appraisee?.role}
+        appraiseeRole={role}
         appraiserName={appraisal.appraiser?.full_name}
         term={formData.term}
         year={formData.year}
         showTargets={showTargets}
         showObservations={showObservations}
-        isTeachingStaff={isTeachingStaff || isFirstlineLeadership}
+        isTeachingStaff={isTeachingStaff}
         isCoach={isCoach}
         targets={targets}
         observation1={formData.observation1}

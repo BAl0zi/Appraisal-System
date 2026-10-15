@@ -107,11 +107,12 @@ export default async function BulkScoresheetPage({ params }: PageProps) {
 
       {appraisals.map((appraisal: any, i: number) => {
         const formData = appraisal.appraisal_data || {};
-        const role = appraisal.appraisee?.role || '';
+        const role = appraisal.role || formData.role || appraisal.appraisee?.role || '';
         const roleCategory = getRoleCategory(role as UserRole);
+        const isSNETeacher = role === 'SPECIAL NEEDS TEACHER';
         const isCoach = role === 'COACH';
         const isTeachingStaff = roleCategory === 'TEACHING';
-        const showTargets = roleCategory !== 'NON_TEACHING';
+        const showTargets = roleCategory !== 'NON_TEACHING' && !isSNETeacher;
         const showObservations = roleCategory === 'TEACHING' || roleCategory === 'NON_TEACHING';
         const observationParams = getObservationParameters(isCoach, isTeachingStaff);
         const evaluationParams = getEvaluationParameters(roleCategory);
@@ -150,7 +151,7 @@ export default async function BulkScoresheetPage({ params }: PageProps) {
         if (showObservations) computedTotal += observationTotal;
         computedTotal += evaluationTotal;
 
-        const totalScore = appraisal.overall_score ?? computedTotal;
+        const totalScore = roleCategory === 'FIRSTLINE_LEADERSHIP' || isSNETeacher ? computedTotal : appraisal.overall_score ?? computedTotal;
         const percentage = totalMax > 0 ? (totalScore / totalMax) * 100 : 0;
         const rating = getRating(percentage);
 
@@ -159,7 +160,7 @@ export default async function BulkScoresheetPage({ params }: PageProps) {
             key={appraisal.id}
             pageBreakAfter={i < appraisals.length - 1}
             appraiseeName={appraisal.appraisee?.full_name}
-            appraiseeRole={appraisal.appraisee?.role}
+            appraiseeRole={role}
             appraiserName={appraisal.appraiser?.full_name}
             term={formData.term}
             year={formData.year}

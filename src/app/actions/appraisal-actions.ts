@@ -49,18 +49,18 @@ export async function saveAppraisal(formData: FormData) {
   const appraisalDataStr = formData.get('appraisalData') as string;
   const overallScore = formData.get('overallScore') as string;
   
-  const appraisalData = JSON.parse(appraisalDataStr);
+  const appraisalData = { ...JSON.parse(appraisalDataStr), role };
   const { term, year } = appraisalData;
 
   let existing = null;
 
   if (appraisalId) {
-     const { data } = await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from('appraisals')
       .select('id')
       .eq('id', appraisalId)
       .single();
-     existing = data;
+    existing = data;
   } else {
      // Try to find by term/year if not provided
      let query = supabaseAdmin
@@ -71,7 +71,7 @@ export async function saveAppraisal(formData: FormData) {
       .contains('appraisal_data', { term, year });
      
      if (role) {
-       query = query.eq('role', role);
+       query = query.contains('appraisal_data', { role });
      }
 
      const { data } = await query.maybeSingle();
@@ -90,7 +90,6 @@ export async function saveAppraisal(formData: FormData) {
         appraisal_data: appraisalData,
         overall_score: parseFloat(overallScore),
         updated_at: new Date().toISOString(),
-        role: role || null // Ensure role is consistent
       })
       .eq('id', existing.id)
       .select('id')
@@ -105,7 +104,6 @@ export async function saveAppraisal(formData: FormData) {
         status,
         appraisal_data: appraisalData,
         overall_score: parseFloat(overallScore),
-        role: role || null
       })
       .select('id')
       .single();

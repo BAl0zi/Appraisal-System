@@ -187,9 +187,11 @@ export default function AppraiserContent({ currentUser, initialTab = 'home', cur
     : 0;
 
   const getAppraisalForUser = (userId: string, role: string) => {
-    return appraisals.find(a => 
-      a.appraisee_id === userId && 
-      a.role === role && 
+    // An appraisal belongs to a specific role and term. Falling back to another
+    // role or term can open the wrong form for staff with multiple roles.
+    return appraisals.find(a =>
+      a.appraisee_id === userId &&
+      (a.role || a.appraisal_data?.role) === role &&
       a.appraisal_data?.term === viewTerm &&
       a.appraisal_data?.year === viewYear
     );
