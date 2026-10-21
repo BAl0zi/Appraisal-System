@@ -95,23 +95,23 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
         appraiseeSignature: '',
         appraiseeDate: '',
         appraiserSignature: '',
-        appraiserDate: ''
+        appraiserDate: '',
+        ...data.targetSignatures,
       },
-      ...data.targetSignatures,
       targetReviewSignatures: {
         appraiseeSignature: '',
         appraiseeDate: '',
         appraiserSignature: '',
-        appraiserDate: ''
+        appraiserDate: '',
+        ...data.targetReviewSignatures,
       },
-      ...data.targetReviewSignatures,
       completionSignatures: {
         appraiseeSignature: '',
         appraiseeDate: '',
         appraiserSignature: '',
-        appraiserDate: ''
+        appraiserDate: '',
+        ...data.completionSignatures,
       },
-      ...data.completionSignatures,
       // CRITICAL: Ensure the overall_score from the top-level existingAppraisal is also captured if it exists
       overall_score: existingAppraisal?.overall_score || data.overall_score || null,
     };
