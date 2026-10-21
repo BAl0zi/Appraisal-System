@@ -86,11 +86,11 @@ export default function AppraisalForm({ appraiserId, appraiser, appraisee, exist
       observation1: data.observation1 || data.observation || defaultObs,
       observation2: data.observation2 || { ...defaultObs, observationType: 'SECOND' },
       evaluation: {
-        ratings: {}, 
+        ratings: {},
         progressComments: ['', ''],
-        improvementComments: ['', '']
+        improvementComments: ['', ''],
+        ...data.evaluation,
       },
-      ...data.evaluation, 
       targetSignatures: {
         appraiseeSignature: '',
         appraiseeDate: '',
