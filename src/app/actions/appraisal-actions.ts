@@ -3,6 +3,7 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createClient } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
+import { getRoleCategory, type UserRole } from '@/constants/roles';
 
 export async function getMyAppraisalsAsAppraisee() {
   const supabase = await createClient();
@@ -49,7 +50,14 @@ export async function saveAppraisal(formData: FormData) {
   const appraisalDataStr = formData.get('appraisalData') as string;
   const overallScore = formData.get('overallScore') as string;
   
-  const appraisalData = { ...JSON.parse(appraisalDataStr), role };
+  const appraisalData: Record<string, any> = { ...JSON.parse(appraisalDataStr), role };
+  const roleCategory = getRoleCategory(role as UserRole);
+  if (roleCategory !== 'TEACHING' && roleCategory !== 'NON_TEACHING') {
+    // Remove stale observation data from leadership appraisals on every save.
+    delete appraisalData.observation;
+    delete appraisalData.observation1;
+    delete appraisalData.observation2;
+  }
   const { term, year } = appraisalData;
 
   let existing = null;
